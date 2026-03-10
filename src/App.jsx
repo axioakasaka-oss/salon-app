@@ -280,7 +280,7 @@ function ManualTab({ staff }) {
   const [manuals, setManuals] = useState([]);
   const [open, setOpen] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title: "", category: "", content: "", icon: "📄" });
+  const [form, setForm] = useState({ title: "", category: "", content: "", icon: "📄", is_html: false });
 
   const load = () => supabase.from("manuals").select("*").order("updated_at", { ascending: false })
     .then(({ data }) => setManuals(data || []));
@@ -289,7 +289,7 @@ function ManualTab({ staff }) {
 
   const save = async () => {
     await supabase.from("manuals").insert({ ...form, updated_at: new Date().toISOString() });
-    setShowForm(false); setForm({ title: "", category: "", content: "", icon: "📄" }); load();
+    setShowForm(false); setForm({ title: "", category: "", content: "", icon: "📄", is_html: false }); load();
   };
 
   const del = async (id) => {
@@ -318,7 +318,12 @@ function ManualTab({ staff }) {
             <p style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 16 }}>
               更新：{new Date(open.updated_at).toLocaleDateString("ja-JP")}
             </p>
-            <div style={{ fontSize: 14, color: COLORS.textMuted, lineHeight: 1.9, whiteSpace: "pre-wrap" }}>{open.content}</div>
+            {open.is_html ? (
+              <div style={{ fontSize: 14, color: COLORS.textMuted, lineHeight: 1.9 }}
+                dangerouslySetInnerHTML={{ __html: open.content }} />
+            ) : (
+              <div style={{ fontSize: 14, color: COLORS.textMuted, lineHeight: 1.9, whiteSpace: "pre-wrap" }}>{open.content}</div>
+            )}
             {staff.is_owner && (
               <div style={{ marginTop: 20, borderTop: `1px solid ${COLORS.border}`, paddingTop: 16 }}>
                 <Btn small danger onClick={() => del(open.id)}>削除</Btn>
@@ -376,8 +381,13 @@ function ManualTab({ staff }) {
             <input placeholder="タイトル" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
             <input placeholder="カテゴリ（例：接客・技術）" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
             <input placeholder="アイコン（絵文字）" value={form.icon} onChange={e => setForm({ ...form, icon: e.target.value })} />
-            <textarea placeholder="内容" value={form.content} onChange={e => setForm({ ...form, content: e.target.value })}
+            <textarea placeholder="内容（テキストまたはHTMLコード）" value={form.content} onChange={e => setForm({ ...form, content: e.target.value })}
               style={{ minHeight: 120, resize: "vertical" }} />
+            <label style={{ display: "flex", alignItems: "center", gap: 8, color: COLORS.text, fontSize: 14, cursor: "pointer" }}>
+              <input type="checkbox" checked={form.is_html} onChange={e => setForm({ ...form, is_html: e.target.checked })}
+                style={{ width: "auto", padding: 0 }} />
+              HTMLとして表示する
+            </label>
             <Btn onClick={save}>保存</Btn>
           </div>
         </Modal>
