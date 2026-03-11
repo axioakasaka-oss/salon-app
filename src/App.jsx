@@ -96,6 +96,19 @@ export default function App() {
           >
             <h2>選択中のお悩み</h2>
             <p>{selected.name}</p>
+            <h3>確認質問</h3>
+
+{!questions || questions.length === 0 ? (
+  <p>質問データはまだありません。</p>
+) : (
+  <ul>
+    {questions.map((q) => (
+      <li key={q.id}>{q.question}</li>
+    ))}
+  </ul>
+)}
+
+
           </div>
 
           <div
