@@ -1,49 +1,61 @@
 import { useEffect, useState } from "react";
+import { supabase } from "./supabase";
 
 export default function App() {
-  const [message, setMessage] = useState("確認中です...");
+  const [topics, setTopics] = useState([]);
+  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    async function runCheck() {
-      try {
-        const url = import.meta.env.VITE_SUPABASE_URL;
-        const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    loadTopics();
+  }, []);
 
-        if (!url) {
-          setMessage("エラー: VITE_SUPABASE_URL が読めていません");
-          return;
-        }
+  async function loadTopics() {
+    const { data, error } = await supabase
+      .from("counseling_topics")
+      .select("*")
+      .order("sort_order");
 
-        if (!key) {
-          setMessage("エラー: VITE_SUPABASE_ANON_KEY が読めていません");
-          return;
-        }
-
-        const mod = await import("@supabase/supabase-js");
-        const createClient = mod.createClient;
-
-        const supabase = createClient(url, key);
-
-        const { error } = await supabase.from("manuals").select("*").limit(1);
-
-        if (error) {
-          setMessage("Supabase接続エラー: " + error.message);
-          return;
-        }
-
-        setMessage("Supabase接続成功");
-      } catch (e) {
-        setMessage("実行エラー: " + (e?.message || String(e)));
-      }
+    if (error) {
+      console.error(error);
+      return;
     }
 
-    runCheck();
-  }, []);
+    setTopics(data);
+  }
 
   return (
     <div style={{ padding: 40, fontFamily: "sans-serif" }}>
-      <h1>AXIO Salon App</h1>
-      <p>{message}</p>
+      <h1>AXIO Salon カウンセリング</h1>
+
+      <h2>お悩みを選択</h2>
+
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        {topics.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setSelected(t)}
+            style={{
+              padding: "10px 16px",
+              borderRadius: 8,
+              border: "1px solid #ccc",
+              background: "#fff",
+              cursor: "pointer",
+            }}
+          >
+            {t.name}
+          </button>
+        ))}
+      </div>
+
+      {selected && (
+        <div style={{ marginTop: 40 }}>
+          <h2>原因</h2>
+          <p>{selected.description || "原因データなし"}</p>
+
+          <h2>おすすめ提案</h2>
+          <p>{selected.solution || "提案データなし"}</p>
+        </div>
+      )}
     </div>
   );
 }
