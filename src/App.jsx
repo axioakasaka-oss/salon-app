@@ -1,23 +1,43 @@
 import { useEffect, useState } from "react";
-import { supabase } from "./supabase";
 
 export default function App() {
-  const [message, setMessage] = useState("読み込み中です...");
+  const [message, setMessage] = useState("確認中です...");
 
   useEffect(() => {
-    async function checkSupabase() {
-      const { data, error } = await supabase.from("manuals").select("*").limit(1);
+    async function runCheck() {
+      try {
+        const url = import.meta.env.VITE_SUPABASE_URL;
+        const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      if (error) {
-        console.error(error);
-        setMessage("Supabase接続エラー: " + error.message);
-        return;
+        if (!url) {
+          setMessage("エラー: VITE_SUPABASE_URL が読めていません");
+          return;
+        }
+
+        if (!key) {
+          setMessage("エラー: VITE_SUPABASE_ANON_KEY が読めていません");
+          return;
+        }
+
+        const mod = await import("@supabase/supabase-js");
+        const createClient = mod.createClient;
+
+        const supabase = createClient(url, key);
+
+        const { error } = await supabase.from("manuals").select("*").limit(1);
+
+        if (error) {
+          setMessage("Supabase接続エラー: " + error.message);
+          return;
+        }
+
+        setMessage("Supabase接続成功");
+      } catch (e) {
+        setMessage("実行エラー: " + (e?.message || String(e)));
       }
-
-      setMessage("Supabase接続成功");
     }
 
-    checkSupabase();
+    runCheck();
   }, []);
 
   return (
