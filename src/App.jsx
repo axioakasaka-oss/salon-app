@@ -11,9 +11,11 @@ export default function App() {
 
   async function loadTopics() {
     const { data, error } = await supabase
-      .from("counseling_topics")
-      .select("*")
-      .order("sort_order");
+  .from("counseling_topics")
+  .select("*")
+  .eq("category", "カウンセリング")
+  .eq("is_active", true)
+  .order("sort_order");
 
     if (error) {
       console.error(error);
