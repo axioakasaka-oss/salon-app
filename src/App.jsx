@@ -6,6 +6,8 @@ export default function App() {
   const [selected, setSelected] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
+  const [branches, setBranches] = useState([]);
+  const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -31,8 +33,9 @@ export default function App() {
   async function selectTopic(topic) {
     setSelected(topic);
     setLoading(true);
+    setAnswers({});
 
-    const [questionsRes, suggestionsRes] = await Promise.all([
+    const [questionsRes, suggestionsRes, branchesRes] = await Promise.all([
       supabase
         .from("counseling_questions")
         .select("*")
@@ -44,23 +47,30 @@ export default function App() {
         .select("*")
         .eq("topic_id", topic.id)
         .order("sort_order"),
+
+      supabase
+        .from("counseling_branches")
+        .select("*")
+        .eq("topic_id", topic.id)
+        .order("sort_order"),
     ]);
 
-    if (questionsRes.error) {
-      console.error("questions error:", questionsRes.error);
-      setQuestions([]);
-    } else {
-      setQuestions(questionsRes.data || []);
-    }
+    setQuestions(questionsRes.error ? [] : questionsRes.data || []);
+    setSuggestions(suggestionsRes.error ? [] : suggestionsRes.data || []);
+    setBranches(branchesRes.error ? [] : branchesRes.data || []);
 
-    if (suggestionsRes.error) {
-      console.error("suggestions error:", suggestionsRes.error);
-      setSuggestions([]);
-    } else {
-      setSuggestions(suggestionsRes.data || []);
-    }
+    if (questionsRes.error) console.error(questionsRes.error);
+    if (suggestionsRes.error) console.error(suggestionsRes.error);
+    if (branchesRes.error) console.error(branchesRes.error);
 
     setLoading(false);
+  }
+
+  function setAnswer(branchId, value) {
+    setAnswers((prev) => ({
+      ...prev,
+      [branchId]: value,
+    }));
   }
 
   const buttonStyle = {
@@ -146,7 +156,70 @@ export default function App() {
           </div>
 
           <div style={cardStyle}>
-            <div style={sectionTitleStyle}>原因と提案</div>
+            <div style={sectionTitleStyle}>YES / NO 分岐</div>
+
+            {!branches || branches.length === 0 ? (
+              <p>分岐データはまだありません。</p>
+            ) : (
+              branches.map((b) => (
+                <div
+                  key={b.id}
+                  style={{
+                    borderTop: "1px solid #eee",
+                    paddingTop: 18,
+                    marginTop: 18,
+                  }}
+                >
+                  <p style={{ fontWeight: "bold", marginBottom: 12 }}>{b.question}</p>
+
+                  <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+                    <button
+                      onClick={() => setAnswer(b.id, "yes")}
+                      style={{
+                        ...buttonStyle,
+                        background: answers[b.id] === "yes" ? "#dff3e3" : "#fff",
+                        borderColor: answers[b.id] === "yes" ? "#6aa57a" : "#d8c7b3",
+                      }}
+                    >
+                      はい
+                    </button>
+
+                    <button
+                      onClick={() => setAnswer(b.id, "no")}
+                      style={{
+                        ...buttonStyle,
+                        background: answers[b.id] === "no" ? "#f5e5e5" : "#fff",
+                        borderColor: answers[b.id] === "no" ? "#c98989" : "#d8c7b3",
+                      }}
+                    >
+                      いいえ
+                    </button>
+                  </div>
+
+                  {answers[b.id] === "yes" && (
+                    <div style={{ background: "#f7fbf7", padding: 14, borderRadius: 10 }}>
+                      <h3 style={{ marginTop: 0 }}>原因候補</h3>
+                      <p>{b.yes_result || "未設定"}</p>
+                      <h3>おすすめ対応</h3>
+                      <p>{b.yes_proposal || "未設定"}</p>
+                    </div>
+                  )}
+
+                  {answers[b.id] === "no" && (
+                    <div style={{ background: "#fbf8f6", padding: 14, borderRadius: 10 }}>
+                      <h3 style={{ marginTop: 0 }}>原因候補</h3>
+                      <p>{b.no_result || "未設定"}</p>
+                      <h3>おすすめ対応</h3>
+                      <p>{b.no_proposal || "未設定"}</p>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+
+          <div style={cardStyle}>
+            <div style={sectionTitleStyle}>基本の原因と提案</div>
 
             {!suggestions || suggestions.length === 0 ? (
               <p>提案データはまだありません。</p>
