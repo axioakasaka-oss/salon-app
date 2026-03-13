@@ -18,13 +18,14 @@ export default function App() {
 
   async function loadTopics() {
     const { data, error } = await supabase
-  .from("counseling_topics")
-  .select("*")
-  .eq("category", "カウンセリング")
-  .order("sort_order");t_order");
+      .from("counseling_topics")
+      .select("*")
+      .eq("category", "カウンセリング")
+      .order("sort_order");
 
     if (error) {
       console.error("topics error:", error);
+      setTopics([]);
       return;
     }
 
@@ -58,13 +59,26 @@ export default function App() {
         .order("sort_order"),
     ]);
 
-    setQuestions(questionsRes.error ? [] : questionsRes.data || []);
-    setSuggestions(suggestionsRes.error ? [] : suggestionsRes.data || []);
-    setBranches(branchesRes.error ? [] : branchesRes.data || []);
+    if (questionsRes.error) {
+      console.error("questions error:", questionsRes.error);
+      setQuestions([]);
+    } else {
+      setQuestions(questionsRes.data || []);
+    }
 
-    if (questionsRes.error) console.error(questionsRes.error);
-    if (suggestionsRes.error) console.error(suggestionsRes.error);
-    if (branchesRes.error) console.error(branchesRes.error);
+    if (suggestionsRes.error) {
+      console.error("suggestions error:", suggestionsRes.error);
+      setSuggestions([]);
+    } else {
+      setSuggestions(suggestionsRes.data || []);
+    }
+
+    if (branchesRes.error) {
+      console.error("branches error:", branchesRes.error);
+      setBranches([]);
+    } else {
+      setBranches(branchesRes.data || []);
+    }
 
     setLoading(false);
   }
@@ -75,7 +89,6 @@ export default function App() {
     const { data, error } = await supabase
       .from("manuals")
       .select("*")
-      
       .order("title");
 
     if (error) {
