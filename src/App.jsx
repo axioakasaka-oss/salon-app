@@ -75,7 +75,7 @@ export default function App() {
     const { data, error } = await supabase
       .from("manuals")
       .select("*")
-      .eq("is_active", true)
+      
       .order("title");
 
     if (error) {
