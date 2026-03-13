@@ -8,6 +8,8 @@ export default function App() {
   const [suggestions, setSuggestions] = useState([]);
   const [branches, setBranches] = useState([]);
   const [answers, setAnswers] = useState({});
+  const [manuals, setManuals] = useState([]);
+  const [showManuals, setShowManuals] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -34,6 +36,8 @@ export default function App() {
     setSelected(topic);
     setLoading(true);
     setAnswers({});
+    setShowManuals(false);
+    setManuals([]);
 
     const [questionsRes, suggestionsRes, branchesRes] = await Promise.all([
       supabase
@@ -64,6 +68,24 @@ export default function App() {
     if (branchesRes.error) console.error(branchesRes.error);
 
     setLoading(false);
+  }
+
+  async function loadManuals() {
+    setShowManuals(true);
+
+    const { data, error } = await supabase
+      .from("manuals")
+      .select("*")
+      .eq("is_active", true)
+      .order("title");
+
+    if (error) {
+      console.error("manuals error:", error);
+      setManuals([]);
+      return;
+    }
+
+    setManuals(data || []);
   }
 
   function setAnswer(branchId, value) {
@@ -258,6 +280,54 @@ export default function App() {
               ))
             )}
           </div>
+
+          <div style={cardStyle}>
+            <div style={sectionTitleStyle}>次の行動</div>
+
+            <button
+              onClick={loadManuals}
+              style={{
+                ...buttonStyle,
+                background: "#2c2420",
+                color: "#fff",
+                border: "1px solid #2c2420",
+              }}
+            >
+              施術マニュアルを見る
+            </button>
+          </div>
+
+          {showManuals && (
+            <div style={cardStyle}>
+              <div style={sectionTitleStyle}>施術マニュアル</div>
+
+              {!manuals || manuals.length === 0 ? (
+                <p>マニュアルデータはまだありません。</p>
+              ) : (
+                manuals.map((m) => (
+                  <div
+                    key={m.id}
+                    style={{
+                      borderTop: "1px solid #eee",
+                      paddingTop: 18,
+                      marginTop: 18,
+                    }}
+                  >
+                    <h3 style={{ marginBottom: 8 }}>{m.title}</h3>
+                    <p style={{ marginTop: 0, lineHeight: 1.8 }}>
+                      {m.description || m.content || "説明なし"}
+                    </p>
+                    <p style={{ marginTop: 0 }}>
+                      <strong>所要時間:</strong> {m.total_time || "未設定"}
+                    </p>
+                    <p style={{ marginTop: 0 }}>
+                      <strong>カテゴリ:</strong> {m.category || "未設定"}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
