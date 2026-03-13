@@ -20,8 +20,7 @@ export default function App() {
     const { data, error } = await supabase
       .from("counseling_topics")
       .select("*")
-      .eq("category", "カウンセリング")
-      .eq("is_active", true)
+      .eq("category", "カウンセリング"
       .order("sort_order");
 
     if (error) {
