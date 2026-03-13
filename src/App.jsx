@@ -18,10 +18,10 @@ export default function App() {
 
   async function loadTopics() {
     const { data, error } = await supabase
-      .from("counseling_topics")
-      .select("*")
-      .eq("category", "カウンセリング"
-      .order("sort_order");
+  .from("counseling_topics")
+  .select("*")
+  .eq("category", "カウンセリング")
+  .order("sort_order");t_order");
 
     if (error) {
       console.error("topics error:", error);
