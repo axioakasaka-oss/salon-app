@@ -112,19 +112,46 @@ export default function App() {
 
   function openManual(manual) {
     setSelectedManual(manual);
+    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
   }
 
   function closeManual() {
     setSelectedManual(null);
   }
 
+  const layoutStyle = {
+    padding: "16px",
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif',
+    background: "#f9f7f4",
+    minHeight: "100vh",
+    color: "#2c2420",
+    maxWidth: "860px",
+    margin: "0 auto",
+  };
+
+  const headingStyle = {
+    fontSize: "clamp(24px, 5vw, 32px)",
+    marginBottom: "24px",
+    lineHeight: 1.3,
+  };
+
+  const subHeadingStyle = {
+    marginBottom: 16,
+    fontSize: "clamp(18px, 4vw, 22px)",
+  };
+
   const buttonStyle = {
-    padding: "10px 16px",
-    borderRadius: 10,
+    padding: "12px 16px",
+    borderRadius: 12,
     border: "1px solid #d8c7b3",
     background: "#fff",
     cursor: "pointer",
     fontSize: 16,
+    lineHeight: 1.4,
+    minHeight: 48,
+    width: "100%",
+    textAlign: "left",
   };
 
   const activeButtonStyle = {
@@ -133,50 +160,87 @@ export default function App() {
     border: "1px solid #b89a7a",
   };
 
+  const actionButtonStyle = {
+    padding: "12px 16px",
+    borderRadius: 12,
+    border: "1px solid #2c2420",
+    background: "#2c2420",
+    color: "#fff",
+    cursor: "pointer",
+    fontSize: 16,
+    lineHeight: 1.4,
+    minHeight: 48,
+    width: "100%",
+  };
+
+  const smallButtonStyle = {
+    padding: "10px 14px",
+    borderRadius: 10,
+    border: "1px solid #d8c7b3",
+    background: "#fff",
+    cursor: "pointer",
+    fontSize: 14,
+    minHeight: 42,
+    width: "100%",
+  };
+
+  const topicGridStyle = {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: 12,
+    marginBottom: 28,
+  };
+
+  const answerButtonsWrapStyle = {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: 10,
+    marginBottom: 14,
+  };
+
   const cardStyle = {
     border: "1px solid #ddd",
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
     background: "#fff",
+    boxShadow: "0 2px 10px rgba(0,0,0,0.03)",
   };
 
   const sectionTitleStyle = {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 12,
+    lineHeight: 1.4,
   };
 
-  const darkButtonStyle = {
-    ...buttonStyle,
-    background: "#2c2420",
-    color: "#fff",
-    border: "1px solid #2c2420",
+  const resultBoxGreen = {
+    background: "#f7fbf7",
+    padding: 14,
+    borderRadius: 12,
+    border: "1px solid #d7ead9",
   };
 
-  const smallButtonStyle = {
-    ...buttonStyle,
-    padding: "8px 12px",
-    fontSize: 14,
+  const resultBoxPink = {
+    background: "#fbf8f6",
+    padding: 14,
+    borderRadius: 12,
+    border: "1px solid #eadfda",
+  };
+
+  const textStyle = {
+    marginTop: 0,
+    lineHeight: 1.9,
+    fontSize: 15,
   };
 
   return (
-    <div
-      style={{
-        padding: 40,
-        fontFamily: "sans-serif",
-        background: "#f9f7f4",
-        minHeight: "100vh",
-        color: "#2c2420",
-      }}
-    >
-      <h1 style={{ fontSize: 32, marginBottom: 30 }}>
-        AXIO Salon カウンセリングツリー
-      </h1>
+    <div style={layoutStyle}>
+      <h1 style={headingStyle}>AXIO Salon カウンセリングツリー</h1>
 
-      <h2 style={{ marginBottom: 20 }}>お悩みを選択</h2>
+      <h2 style={subHeadingStyle}>お悩みを選択</h2>
 
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 40 }}>
+      <div style={topicGridStyle}>
         {topics.map((t) => (
           <button
             key={t.id}
@@ -188,13 +252,20 @@ export default function App() {
         ))}
       </div>
 
-      {loading && <p>読み込み中です...</p>}
+      {loading && <p style={textStyle}>読み込み中です...</p>}
 
       {selected && !loading && (
         <div>
           <div style={cardStyle}>
             <div style={sectionTitleStyle}>選択中のお悩み</div>
-            <p style={{ fontSize: 24, fontWeight: "bold", margin: 0 }}>
+            <p
+              style={{
+                fontSize: "clamp(20px, 4vw, 24px)",
+                fontWeight: "bold",
+                margin: 0,
+                lineHeight: 1.5,
+              }}
+            >
               {selected.name}
             </p>
           </div>
@@ -203,11 +274,13 @@ export default function App() {
             <div style={sectionTitleStyle}>確認質問</div>
 
             {!questions || questions.length === 0 ? (
-              <p>質問データはまだありません。</p>
+              <p style={textStyle}>質問データはまだありません。</p>
             ) : (
-              <ul style={{ paddingLeft: 20, lineHeight: 1.9 }}>
+              <ul style={{ paddingLeft: 20, lineHeight: 1.9, margin: 0 }}>
                 {questions.map((q) => (
-                  <li key={q.id}>{q.question}</li>
+                  <li key={q.id} style={{ marginBottom: 8 }}>
+                    {q.question}
+                  </li>
                 ))}
               </ul>
             )}
@@ -217,7 +290,7 @@ export default function App() {
             <div style={sectionTitleStyle}>YES / NO 分岐</div>
 
             {!branches || branches.length === 0 ? (
-              <p>分岐データはまだありません。</p>
+              <p style={textStyle}>分岐データはまだありません。</p>
             ) : (
               branches.map((b) => (
                 <div
@@ -228,13 +301,23 @@ export default function App() {
                     marginTop: 18,
                   }}
                 >
-                  <p style={{ fontWeight: "bold", marginBottom: 12 }}>{b.question}</p>
+                  <p
+                    style={{
+                      fontWeight: "bold",
+                      marginBottom: 12,
+                      lineHeight: 1.8,
+                      fontSize: 16,
+                    }}
+                  >
+                    {b.question}
+                  </p>
 
-                  <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+                  <div style={answerButtonsWrapStyle}>
                     <button
                       onClick={() => setAnswer(b.id, "yes")}
                       style={{
                         ...buttonStyle,
+                        textAlign: "center",
                         background: answers[b.id] === "yes" ? "#dff3e3" : "#fff",
                         borderColor: answers[b.id] === "yes" ? "#6aa57a" : "#d8c7b3",
                       }}
@@ -246,6 +329,7 @@ export default function App() {
                       onClick={() => setAnswer(b.id, "no")}
                       style={{
                         ...buttonStyle,
+                        textAlign: "center",
                         background: answers[b.id] === "no" ? "#f5e5e5" : "#fff",
                         borderColor: answers[b.id] === "no" ? "#c98989" : "#d8c7b3",
                       }}
@@ -255,20 +339,20 @@ export default function App() {
                   </div>
 
                   {answers[b.id] === "yes" && (
-                    <div style={{ background: "#f7fbf7", padding: 14, borderRadius: 10 }}>
-                      <h3 style={{ marginTop: 0 }}>原因候補</h3>
-                      <p>{b.yes_result || "未設定"}</p>
-                      <h3>おすすめ対応</h3>
-                      <p>{b.yes_proposal || "未設定"}</p>
+                    <div style={resultBoxGreen}>
+                      <h3 style={{ marginTop: 0, marginBottom: 8 }}>原因候補</h3>
+                      <p style={textStyle}>{b.yes_result || "未設定"}</p>
+                      <h3 style={{ marginBottom: 8 }}>おすすめ対応</h3>
+                      <p style={textStyle}>{b.yes_proposal || "未設定"}</p>
                     </div>
                   )}
 
                   {answers[b.id] === "no" && (
-                    <div style={{ background: "#fbf8f6", padding: 14, borderRadius: 10 }}>
-                      <h3 style={{ marginTop: 0 }}>原因候補</h3>
-                      <p>{b.no_result || "未設定"}</p>
-                      <h3>おすすめ対応</h3>
-                      <p>{b.no_proposal || "未設定"}</p>
+                    <div style={resultBoxPink}>
+                      <h3 style={{ marginTop: 0, marginBottom: 8 }}>原因候補</h3>
+                      <p style={textStyle}>{b.no_result || "未設定"}</p>
+                      <h3 style={{ marginBottom: 8 }}>おすすめ対応</h3>
+                      <p style={textStyle}>{b.no_proposal || "未設定"}</p>
                     </div>
                   )}
                 </div>
@@ -280,7 +364,7 @@ export default function App() {
             <div style={sectionTitleStyle}>基本の原因と提案</div>
 
             {!suggestions || suggestions.length === 0 ? (
-              <p>提案データはまだありません。</p>
+              <p style={textStyle}>提案データはまだありません。</p>
             ) : (
               suggestions.map((s) => (
                 <div
@@ -292,24 +376,18 @@ export default function App() {
                   }}
                 >
                   <h3 style={{ marginBottom: 8 }}>原因</h3>
-                  <p style={{ marginTop: 0, lineHeight: 1.8 }}>
-                    {s.cause_hypothesis || "未設定"}
-                  </p>
+                  <p style={textStyle}>{s.cause_hypothesis || "未設定"}</p>
 
                   <h3 style={{ marginBottom: 8 }}>おすすめ施術</h3>
-                  <p style={{ marginTop: 0, lineHeight: 1.8 }}>
-                    {s.proposal_menu || "未設定"}
-                  </p>
+                  <p style={textStyle}>{s.proposal_menu || "未設定"}</p>
 
                   <h3 style={{ marginBottom: 8 }}>説明トーク</h3>
-                  <p style={{ marginTop: 0, lineHeight: 1.8 }}>
-                    {s.talk_script || "未設定"}
-                  </p>
+                  <p style={textStyle}>{s.talk_script || "未設定"}</p>
 
                   {s.caution && (
                     <>
                       <h3 style={{ marginBottom: 8 }}>注意点</h3>
-                      <p style={{ marginTop: 0, lineHeight: 1.8 }}>{s.caution}</p>
+                      <p style={textStyle}>{s.caution}</p>
                     </>
                   )}
                 </div>
@@ -320,7 +398,7 @@ export default function App() {
           <div style={cardStyle}>
             <div style={sectionTitleStyle}>次の行動</div>
 
-            <button onClick={loadManuals} style={darkButtonStyle}>
+            <button onClick={loadManuals} style={actionButtonStyle}>
               施術マニュアルを見る
             </button>
           </div>
@@ -330,7 +408,7 @@ export default function App() {
               <div style={sectionTitleStyle}>施術マニュアル一覧</div>
 
               {!manuals || manuals.length === 0 ? (
-                <p>マニュアルデータはまだありません。</p>
+                <p style={textStyle}>マニュアルデータはまだありません。</p>
               ) : (
                 manuals.map((m) => (
                   <div
@@ -341,14 +419,12 @@ export default function App() {
                       marginTop: 18,
                     }}
                   >
-                    <h3 style={{ marginBottom: 8 }}>{m.title}</h3>
-                    <p style={{ marginTop: 0, lineHeight: 1.8 }}>
-                      {m.description || m.content || "説明なし"}
-                    </p>
-                    <p style={{ marginTop: 0 }}>
+                    <h3 style={{ marginBottom: 8, lineHeight: 1.6 }}>{m.title}</h3>
+                    <p style={textStyle}>{m.description || m.content || "説明なし"}</p>
+                    <p style={{ marginTop: 0, marginBottom: 6, lineHeight: 1.7 }}>
                       <strong>所要時間:</strong> {m.total_time || "未設定"}
                     </p>
-                    <p style={{ marginTop: 0 }}>
+                    <p style={{ marginTop: 0, marginBottom: 14, lineHeight: 1.7 }}>
                       <strong>カテゴリ:</strong> {m.category || "未設定"}
                     </p>
 
@@ -363,7 +439,14 @@ export default function App() {
 
           {selectedManual && (
             <div style={cardStyle}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr",
+                  gap: 10,
+                  marginBottom: 12,
+                }}
+              >
                 <div style={sectionTitleStyle}>マニュアル詳細</div>
                 <button onClick={closeManual} style={smallButtonStyle}>
                   閉じる
@@ -377,12 +460,13 @@ export default function App() {
                       textAlign: "center",
                       background: "linear-gradient(135deg,#b7946e,#8b6842)",
                       color: "#fff",
-                      borderRadius: 8,
-                      padding: 10,
+                      borderRadius: 10,
+                      padding: 12,
                       marginBottom: 16,
-                      fontSize: 13,
+                      fontSize: 14,
                       fontWeight: 700,
-                      letterSpacing: 1,
+                      letterSpacing: 0.5,
+                      lineHeight: 1.5,
                     }}
                   >
                     ⏱ 施術時間：1時間30分（全9ステップ）
@@ -390,19 +474,25 @@ export default function App() {
 
                   <div
                     style={{
-                      display: "flex",
-                      gap: 12,
-                      flexWrap: "wrap",
+                      display: "grid",
+                      gridTemplateColumns: "1fr",
+                      gap: 8,
                       marginBottom: 16,
-                      padding: "10px 14px",
+                      padding: "12px 14px",
                       background: "#fff",
-                      borderRadius: 8,
+                      borderRadius: 10,
                       border: "1px solid rgba(183,148,110,0.12)",
                     }}
                   >
-                    <span style={{ fontSize: 10 }}>💬 声かけ：お客様への言葉</span>
-                    <span style={{ fontSize: 10 }}>📋 説明：施術の説明</span>
-                    <span style={{ fontSize: 10 }}>⚙ 作業：スタッフの動作</span>
+                    <span style={{ fontSize: 12, lineHeight: 1.6 }}>
+                      💬 声かけ：お客様への言葉
+                    </span>
+                    <span style={{ fontSize: 12, lineHeight: 1.6 }}>
+                      📋 説明：施術の説明
+                    </span>
+                    <span style={{ fontSize: 12, lineHeight: 1.6 }}>
+                      ⚙ 作業：スタッフの動作
+                    </span>
                   </div>
 
                   {[
@@ -490,20 +580,21 @@ export default function App() {
                       style={{
                         background: "#fff",
                         border: "1px solid rgba(183,148,110,0.2)",
-                        borderRadius: 10,
-                        padding: "16px 18px",
+                        borderRadius: 12,
+                        padding: "14px 14px",
                         marginBottom: 14,
                         boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
                       }}
                     >
                       <div
                         style={{
-                          display: "flex",
-                          alignItems: "center",
+                          display: "grid",
+                          gridTemplateColumns: "28px 1fr",
                           gap: 10,
                           marginBottom: 12,
                           borderBottom: "1px solid rgba(183,148,110,0.2)",
                           paddingBottom: 10,
+                          alignItems: "center",
                         }}
                       >
                         <div
@@ -518,27 +609,37 @@ export default function App() {
                             justifyContent: "center",
                             fontSize: 12,
                             fontWeight: 700,
-                            flexShrink: 0,
                           }}
                         >
                           {step.num}
                         </div>
-                        <div style={{ fontSize: 14, fontWeight: 700, flex: 1 }}>
-                          {step.title}
+
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 14,
+                              fontWeight: 700,
+                              lineHeight: 1.5,
+                              marginBottom: 6,
+                            }}
+                          >
+                            {step.title}
+                          </div>
+                          <span
+                            style={{
+                              display: "inline-block",
+                              fontSize: 11,
+                              padding: "4px 10px",
+                              borderRadius: 999,
+                              background: "rgba(183,148,110,0.12)",
+                              border: "1px solid rgba(183,148,110,0.3)",
+                              color: "#8b6842",
+                              lineHeight: 1.4,
+                            }}
+                          >
+                            {step.time}
+                          </span>
                         </div>
-                        <span
-                          style={{
-                            fontSize: 10,
-                            padding: "3px 9px",
-                            borderRadius: 10,
-                            background: "rgba(183,148,110,0.12)",
-                            border: "1px solid rgba(183,148,110,0.3)",
-                            color: "#8b6842",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {step.time}
-                        </span>
                       </div>
 
                       {step.blocks.map((block, index) => (
@@ -546,12 +647,12 @@ export default function App() {
                           <div
                             style={{
                               display: "inline-block",
-                              fontSize: 9,
-                              padding: "2px 7px",
-                              borderRadius: 2,
-                              marginBottom: 5,
-                              fontWeight: 500,
-                              letterSpacing: 1,
+                              fontSize: 10,
+                              padding: "3px 8px",
+                              borderRadius: 4,
+                              marginBottom: 6,
+                              fontWeight: 600,
+                              letterSpacing: 0.3,
                               background: "rgba(139,104,66,0.1)",
                               color: "#8b6842",
                               border: "1px solid rgba(139,104,66,0.2)",
@@ -562,12 +663,13 @@ export default function App() {
                           <div
                             style={{
                               background: "#f9f6f1",
-                              borderLeft: "2px solid rgba(183,148,110,0.4)",
-                              padding: "8px 12px",
-                              borderRadius: "0 4px 4px 0",
-                              fontSize: 12,
+                              borderLeft: "3px solid rgba(183,148,110,0.4)",
+                              padding: "10px 12px",
+                              borderRadius: "0 6px 6px 0",
+                              fontSize: 13,
                               lineHeight: 1.85,
                               color: "#5a4a40",
+                              whiteSpace: "pre-line",
                             }}
                           >
                             {block.text}
@@ -579,23 +681,24 @@ export default function App() {
                 </div>
               ) : (
                 <div>
-                  <h2 style={{ marginTop: 0 }}>{selectedManual.title}</h2>
-                  <p>{selectedManual.description || "説明なし"}</p>
+                  <h2 style={{ marginTop: 0, lineHeight: 1.5 }}>{selectedManual.title}</h2>
+                  <p style={textStyle}>{selectedManual.description || "説明なし"}</p>
                   <div
                     style={{
                       whiteSpace: "pre-line",
                       lineHeight: 1.9,
                       background: "#fafafa",
                       padding: 16,
-                      borderRadius: 10,
+                      borderRadius: 12,
+                      fontSize: 14,
                     }}
                   >
                     {selectedManual.content || "本文なし"}
                   </div>
-                  <p style={{ marginTop: 16 }}>
+                  <p style={{ marginTop: 16, marginBottom: 6, lineHeight: 1.7 }}>
                     <strong>所要時間:</strong> {selectedManual.total_time || "未設定"}
                   </p>
-                  <p>
+                  <p style={{ marginTop: 0, lineHeight: 1.7 }}>
                     <strong>カテゴリ:</strong> {selectedManual.category || "未設定"}
                   </p>
                 </div>
