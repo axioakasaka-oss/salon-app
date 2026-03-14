@@ -61,26 +61,13 @@ export default function App() {
         .order("sort_order"),
     ]);
 
-    if (questionsRes.error) {
-      console.error("questions error:", questionsRes.error);
-      setQuestions([]);
-    } else {
-      setQuestions(questionsRes.data || []);
-    }
+    setQuestions(questionsRes.error ? [] : questionsRes.data || []);
+    setSuggestions(suggestionsRes.error ? [] : suggestionsRes.data || []);
+    setBranches(branchesRes.error ? [] : branchesRes.data || []);
 
-    if (suggestionsRes.error) {
-      console.error("suggestions error:", suggestionsRes.error);
-      setSuggestions([]);
-    } else {
-      setSuggestions(suggestionsRes.data || []);
-    }
-
-    if (branchesRes.error) {
-      console.error("branches error:", branchesRes.error);
-      setBranches([]);
-    } else {
-      setBranches(branchesRes.data || []);
-    }
+    if (questionsRes.error) console.error(questionsRes.error);
+    if (suggestionsRes.error) console.error(suggestionsRes.error);
+    if (branchesRes.error) console.error(branchesRes.error);
 
     setLoading(false);
   }
@@ -211,7 +198,6 @@ export default function App() {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 12,
-    lineHeight: 1.4,
   };
 
   const resultBoxGreen = {
@@ -232,6 +218,16 @@ export default function App() {
     marginTop: 0,
     lineHeight: 1.9,
     fontSize: 15,
+  };
+
+  const labelStyle = {
+    display: "inline-block",
+    fontSize: 10,
+    padding: "3px 8px",
+    borderRadius: 4,
+    marginBottom: 6,
+    fontWeight: 600,
+    letterSpacing: 0.3,
   };
 
   return (
@@ -453,7 +449,7 @@ export default function App() {
                 </button>
               </div>
 
-              {selectedManual.title === "幹細胞頭皮ケア" ? (
+              {selectedManual.title === "幹細胞発毛メニュー" ? (
                 <div>
                   <div
                     style={{
@@ -485,13 +481,43 @@ export default function App() {
                     }}
                   >
                     <span style={{ fontSize: 12, lineHeight: 1.6 }}>
-                      💬 声かけ：お客様への言葉
+                      <span
+                        style={{
+                          ...labelStyle,
+                          background: "rgba(139,104,66,0.1)",
+                          color: "#8b6842",
+                          border: "1px solid rgba(139,104,66,0.2)",
+                        }}
+                      >
+                        💬 声かけ
+                      </span>{" "}
+                      お客様への言葉
                     </span>
                     <span style={{ fontSize: 12, lineHeight: 1.6 }}>
-                      📋 説明：施術の説明
+                      <span
+                        style={{
+                          ...labelStyle,
+                          background: "rgba(76,120,100,0.1)",
+                          color: "#3a7a58",
+                          border: "1px solid rgba(76,120,100,0.2)",
+                        }}
+                      >
+                        📋 説明
+                      </span>{" "}
+                      施術の説明
                     </span>
                     <span style={{ fontSize: 12, lineHeight: 1.6 }}>
-                      ⚙ 作業：スタッフの動作
+                      <span
+                        style={{
+                          ...labelStyle,
+                          background: "rgba(80,100,160,0.1)",
+                          color: "#4060b0",
+                          border: "1px solid rgba(80,100,160,0.2)",
+                        }}
+                      >
+                        ⚙ 作業
+                      </span>{" "}
+                      スタッフの動作
                     </span>
                   </div>
 
@@ -500,16 +526,34 @@ export default function App() {
                       num: 1,
                       title: "付け位置確認",
                       time: "約5分",
-                      blocks: [{ label: "💬 声かけ", text: "「幹細胞の付け位置を確認します」" }],
+                      blocks: [
+                        {
+                          type: "voice",
+                          label: "💬 声かけ",
+                          text: "「幹細胞の付け位置を確認します」",
+                        },
+                      ],
                     },
                     {
                       num: 2,
                       title: "クレンジング＋スチーム準備",
                       time: "約5分",
                       blocks: [
-                        { label: "⚙ 作業", text: "シャンプー台に倒してクレンジング塗布＋スチームのスイッチ準備" },
-                        { label: "📋 説明", text: "「毛穴に詰まった普段落としきれていない汚れを浮き出させるクレンジングです」" },
-                        { label: "💬 声かけ", text: "「クレンジングが冷たいです。失礼します」" },
+                        {
+                          type: "work",
+                          label: "⚙ 作業",
+                          text: "シャンプー台に倒してクレンジング塗布＋スチームのスイッチ準備",
+                        },
+                        {
+                          type: "explanation",
+                          label: "📋 説明",
+                          text: "「毛穴に詰まった普段落としきれていない汚れを浮き出させるクレンジングです」",
+                        },
+                        {
+                          type: "voice",
+                          label: "💬 声かけ",
+                          text: "「クレンジングが冷たいです。失礼します」",
+                        },
                       ],
                     },
                     {
@@ -517,9 +561,21 @@ export default function App() {
                       title: "スチーム 10分",
                       time: "約15分",
                       blocks: [
-                        { label: "⚙ 作業", text: "起こしてターバンとキャップをつけてスチーム10分" },
-                        { label: "📋 説明", text: "「水素のスチームに入れることで血行促進と毛穴の汚れを浮き出させるお手伝いの2つの効果があります」" },
-                        { label: "💬 声かけ", text: "「徐々にスチームであったかくなっていきます。温度が熱すぎたりしたらおっしゃってください。置き時間にお飲み物をお持ちします」" },
+                        {
+                          type: "work",
+                          label: "⚙ 作業",
+                          text: "起こしてターバンとキャップをつけてスチーム10分",
+                        },
+                        {
+                          type: "explanation",
+                          label: "📋 説明",
+                          text: "「水素のスチームに入れることで血行促進と毛穴の汚れを浮き出させるお手伝いの2つの効果があります」",
+                        },
+                        {
+                          type: "voice",
+                          label: "💬 声かけ",
+                          text: "「徐々にスチームであったかくなっていきます。温度が熱すぎたりしたらおっしゃってください。置き時間にお飲み物をお持ちします」",
+                        },
                       ],
                     },
                     {
@@ -527,8 +583,16 @@ export default function App() {
                       title: "飲み物・幹細胞の準備",
                       time: "③と並行",
                       blocks: [
-                        { label: "⚙ 作業", text: "スチーム置き時間中にお飲み物を準備する" },
-                        { label: "⚙ 作業", text: "幹細胞上清液を準備する" },
+                        {
+                          type: "work",
+                          label: "⚙ 作業",
+                          text: "スチーム置き時間中にお飲み物を準備する",
+                        },
+                        {
+                          type: "work",
+                          label: "⚙ 作業",
+                          text: "幹細胞上清液を準備する",
+                        },
                       ],
                     },
                     {
@@ -536,8 +600,16 @@ export default function App() {
                       title: "シャンプー（ハーブフォンデュシャンプー）",
                       time: "約20分",
                       blocks: [
-                        { label: "📋 説明", text: "「髪が生えるときに必要なベースのミネラル分にプラスしてハーブや漢方などのエキスが入っていますので血行促進や抗酸化作用があり、育毛・アンチエイジングの効果が高いシャンプーです」" },
-                        { label: "💬 声かけ", text: "「2回目のシャンプーは育毛効果の高いハーブのシャンプーでマッサージしていきます」" },
+                        {
+                          type: "explanation",
+                          label: "📋 説明",
+                          text: "「髪が生えるときに必要なベースのミネラル分にプラスしてハーブや漢方などのエキスが入っていますので血行促進や抗酸化作用があり、育毛・アンチエイジングの効果が高いシャンプーです」",
+                        },
+                        {
+                          type: "voice",
+                          label: "💬 声かけ",
+                          text: "「2回目のシャンプーは育毛効果の高いハーブのシャンプーでマッサージしていきます」",
+                        },
                       ],
                     },
                     {
@@ -545,7 +617,11 @@ export default function App() {
                       title: "幹細胞上清液付け・エレクトロポレーション",
                       time: "約15分",
                       blocks: [
-                        { label: "💬 声かけ", text: "「機械の強さは程よく刺激を感じるぐらいが良いので、痛すぎたり弱すぎたりしたら調整しますのでおっしゃってください」" },
+                        {
+                          type: "voice",
+                          label: "💬 声かけ",
+                          text: "「機械の強さは程よく刺激を感じるぐらいが良いので、痛すぎたり弱すぎたりしたら調整しますのでおっしゃってください」",
+                        },
                       ],
                     },
                     {
@@ -553,7 +629,11 @@ export default function App() {
                       title: "トリートメント＆ブロー",
                       time: "約10分",
                       blocks: [
-                        { label: "⚙ 作業", text: "毛先にトリートメントスプレーをつけてブロー仕上げ" },
+                        {
+                          type: "work",
+                          label: "⚙ 作業",
+                          text: "毛先にトリートメントスプレーをつけてブロー仕上げ",
+                        },
                       ],
                     },
                     {
@@ -561,7 +641,11 @@ export default function App() {
                       title: "アフターカウンセリング",
                       time: "約5分",
                       blocks: [
-                        { label: "💬 声かけ", text: "「ご自身での実感はいかがですか？私は○○になってきていると思います」" },
+                        {
+                          type: "voice",
+                          label: "💬 声かけ",
+                          text: "「ご自身での実感はいかがですか？私は○○になってきていると思います」",
+                        },
                       ],
                     },
                     {
@@ -569,9 +653,9 @@ export default function App() {
                       title: "会計・次回予約・お見送り",
                       time: "約5分",
                       blocks: [
-                        { label: "💳", text: "お会計" },
-                        { label: "📅", text: "次回予約の確認" },
-                        { label: "🚪", text: "笑顔でお見送り" },
+                        { type: "final", label: "💳", text: "お会計" },
+                        { type: "final", label: "📅", text: "次回予約の確認" },
+                        { type: "final", label: "🚪", text: "笑顔でお見送り" },
                       ],
                     },
                   ].map((step) => (
@@ -631,9 +715,16 @@ export default function App() {
                               fontSize: 11,
                               padding: "4px 10px",
                               borderRadius: 999,
-                              background: "rgba(183,148,110,0.12)",
-                              border: "1px solid rgba(183,148,110,0.3)",
-                              color: "#8b6842",
+                              background:
+                                step.time === "③と並行"
+                                  ? "rgba(80,100,160,0.08)"
+                                  : "rgba(183,148,110,0.12)",
+                              border:
+                                step.time === "③と並行"
+                                  ? "1px solid rgba(80,100,160,0.25)"
+                                  : "1px solid rgba(183,148,110,0.3)",
+                              color:
+                                step.time === "③と並行" ? "#4060b0" : "#8b6842",
                               lineHeight: 1.4,
                             }}
                           >
@@ -642,40 +733,52 @@ export default function App() {
                         </div>
                       </div>
 
-                      {step.blocks.map((block, index) => (
-                        <div key={index} style={{ marginBottom: 10 }}>
-                          <div
-                            style={{
-                              display: "inline-block",
-                              fontSize: 10,
-                              padding: "3px 8px",
-                              borderRadius: 4,
-                              marginBottom: 6,
-                              fontWeight: 600,
-                              letterSpacing: 0.3,
-                              background: "rgba(139,104,66,0.1)",
-                              color: "#8b6842",
-                              border: "1px solid rgba(139,104,66,0.2)",
-                            }}
-                          >
-                            {block.label}
+                      {step.blocks.map((block, index) => {
+                        let currentLabelStyle = {
+                          ...labelStyle,
+                          background: "rgba(139,104,66,0.1)",
+                          color: "#8b6842",
+                          border: "1px solid rgba(139,104,66,0.2)",
+                        };
+
+                        if (block.type === "explanation") {
+                          currentLabelStyle = {
+                            ...labelStyle,
+                            background: "rgba(76,120,100,0.1)",
+                            color: "#3a7a58",
+                            border: "1px solid rgba(76,120,100,0.2)",
+                          };
+                        }
+
+                        if (block.type === "work" || block.type === "final") {
+                          currentLabelStyle = {
+                            ...labelStyle,
+                            background: "rgba(80,100,160,0.1)",
+                            color: "#4060b0",
+                            border: "1px solid rgba(80,100,160,0.2)",
+                          };
+                        }
+
+                        return (
+                          <div key={index} style={{ marginBottom: 10 }}>
+                            <div style={currentLabelStyle}>{block.label}</div>
+                            <div
+                              style={{
+                                background: "#f9f6f1",
+                                borderLeft: "3px solid rgba(183,148,110,0.4)",
+                                padding: "10px 12px",
+                                borderRadius: "0 6px 6px 0",
+                                fontSize: 13,
+                                lineHeight: 1.85,
+                                color: "#5a4a40",
+                                whiteSpace: "pre-line",
+                              }}
+                            >
+                              {block.text}
+                            </div>
                           </div>
-                          <div
-                            style={{
-                              background: "#f9f6f1",
-                              borderLeft: "3px solid rgba(183,148,110,0.4)",
-                              padding: "10px 12px",
-                              borderRadius: "0 6px 6px 0",
-                              fontSize: 13,
-                              lineHeight: 1.85,
-                              color: "#5a4a40",
-                              whiteSpace: "pre-line",
-                            }}
-                          >
-                            {block.text}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ))}
                 </div>
