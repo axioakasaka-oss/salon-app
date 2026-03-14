@@ -11,6 +11,7 @@ export default function App() {
   const [manuals, setManuals] = useState([]);
   const [showManuals, setShowManuals] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [selectedManual, setSelectedManual] = useState(null);
 
   useEffect(() => {
     loadTopics();
@@ -38,6 +39,7 @@ export default function App() {
     setAnswers({});
     setShowManuals(false);
     setManuals([]);
+    setSelectedManual(null);
 
     const [questionsRes, suggestionsRes, branchesRes] = await Promise.all([
       supabase
@@ -85,6 +87,7 @@ export default function App() {
 
   async function loadManuals() {
     setShowManuals(true);
+    setSelectedManual(null);
 
     const { data, error } = await supabase
       .from("manuals")
@@ -105,6 +108,14 @@ export default function App() {
       ...prev,
       [branchId]: value,
     }));
+  }
+
+  function openManual(manual) {
+    setSelectedManual(manual);
+  }
+
+  function closeManual() {
+    setSelectedManual(null);
   }
 
   const buttonStyle = {
@@ -134,6 +145,19 @@ export default function App() {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 12,
+  };
+
+  const darkButtonStyle = {
+    ...buttonStyle,
+    background: "#2c2420",
+    color: "#fff",
+    border: "1px solid #2c2420",
+  };
+
+  const smallButtonStyle = {
+    ...buttonStyle,
+    padding: "8px 12px",
+    fontSize: 14,
   };
 
   return (
@@ -296,22 +320,14 @@ export default function App() {
           <div style={cardStyle}>
             <div style={sectionTitleStyle}>次の行動</div>
 
-            <button
-              onClick={loadManuals}
-              style={{
-                ...buttonStyle,
-                background: "#2c2420",
-                color: "#fff",
-                border: "1px solid #2c2420",
-              }}
-            >
+            <button onClick={loadManuals} style={darkButtonStyle}>
               施術マニュアルを見る
             </button>
           </div>
 
           {showManuals && (
             <div style={cardStyle}>
-              <div style={sectionTitleStyle}>施術マニュアル</div>
+              <div style={sectionTitleStyle}>施術マニュアル一覧</div>
 
               {!manuals || manuals.length === 0 ? (
                 <p>マニュアルデータはまだありません。</p>
@@ -335,8 +351,254 @@ export default function App() {
                     <p style={{ marginTop: 0 }}>
                       <strong>カテゴリ:</strong> {m.category || "未設定"}
                     </p>
+
+                    <button onClick={() => openManual(m)} style={smallButtonStyle}>
+                      詳細を見る
+                    </button>
                   </div>
                 ))
+              )}
+            </div>
+          )}
+
+          {selectedManual && (
+            <div style={cardStyle}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                <div style={sectionTitleStyle}>マニュアル詳細</div>
+                <button onClick={closeManual} style={smallButtonStyle}>
+                  閉じる
+                </button>
+              </div>
+
+              {selectedManual.title === "幹細胞頭皮ケア" ? (
+                <div>
+                  <div
+                    style={{
+                      textAlign: "center",
+                      background: "linear-gradient(135deg,#b7946e,#8b6842)",
+                      color: "#fff",
+                      borderRadius: 8,
+                      padding: 10,
+                      marginBottom: 16,
+                      fontSize: 13,
+                      fontWeight: 700,
+                      letterSpacing: 1,
+                    }}
+                  >
+                    ⏱ 施術時間：1時間30分（全9ステップ）
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 12,
+                      flexWrap: "wrap",
+                      marginBottom: 16,
+                      padding: "10px 14px",
+                      background: "#fff",
+                      borderRadius: 8,
+                      border: "1px solid rgba(183,148,110,0.12)",
+                    }}
+                  >
+                    <span style={{ fontSize: 10 }}>💬 声かけ：お客様への言葉</span>
+                    <span style={{ fontSize: 10 }}>📋 説明：施術の説明</span>
+                    <span style={{ fontSize: 10 }}>⚙ 作業：スタッフの動作</span>
+                  </div>
+
+                  {[
+                    {
+                      num: 1,
+                      title: "付け位置確認",
+                      time: "約5分",
+                      blocks: [{ label: "💬 声かけ", text: "「幹細胞の付け位置を確認します」" }],
+                    },
+                    {
+                      num: 2,
+                      title: "クレンジング＋スチーム準備",
+                      time: "約5分",
+                      blocks: [
+                        { label: "⚙ 作業", text: "シャンプー台に倒してクレンジング塗布＋スチームのスイッチ準備" },
+                        { label: "📋 説明", text: "「毛穴に詰まった普段落としきれていない汚れを浮き出させるクレンジングです」" },
+                        { label: "💬 声かけ", text: "「クレンジングが冷たいです。失礼します」" },
+                      ],
+                    },
+                    {
+                      num: 3,
+                      title: "スチーム 10分",
+                      time: "約15分",
+                      blocks: [
+                        { label: "⚙ 作業", text: "起こしてターバンとキャップをつけてスチーム10分" },
+                        { label: "📋 説明", text: "「水素のスチームに入れることで血行促進と毛穴の汚れを浮き出させるお手伝いの2つの効果があります」" },
+                        { label: "💬 声かけ", text: "「徐々にスチームであったかくなっていきます。温度が熱すぎたりしたらおっしゃってください。置き時間にお飲み物をお持ちします」" },
+                      ],
+                    },
+                    {
+                      num: 4,
+                      title: "飲み物・幹細胞の準備",
+                      time: "③と並行",
+                      blocks: [
+                        { label: "⚙ 作業", text: "スチーム置き時間中にお飲み物を準備する" },
+                        { label: "⚙ 作業", text: "幹細胞上清液を準備する" },
+                      ],
+                    },
+                    {
+                      num: 5,
+                      title: "シャンプー（ハーブフォンデュシャンプー）",
+                      time: "約20分",
+                      blocks: [
+                        { label: "📋 説明", text: "「髪が生えるときに必要なベースのミネラル分にプラスしてハーブや漢方などのエキスが入っていますので血行促進や抗酸化作用があり、育毛・アンチエイジングの効果が高いシャンプーです」" },
+                        { label: "💬 声かけ", text: "「2回目のシャンプーは育毛効果の高いハーブのシャンプーでマッサージしていきます」" },
+                      ],
+                    },
+                    {
+                      num: 6,
+                      title: "幹細胞上清液付け・エレクトロポレーション",
+                      time: "約15分",
+                      blocks: [
+                        { label: "💬 声かけ", text: "「機械の強さは程よく刺激を感じるぐらいが良いので、痛すぎたり弱すぎたりしたら調整しますのでおっしゃってください」" },
+                      ],
+                    },
+                    {
+                      num: 7,
+                      title: "トリートメント＆ブロー",
+                      time: "約10分",
+                      blocks: [
+                        { label: "⚙ 作業", text: "毛先にトリートメントスプレーをつけてブロー仕上げ" },
+                      ],
+                    },
+                    {
+                      num: 8,
+                      title: "アフターカウンセリング",
+                      time: "約5分",
+                      blocks: [
+                        { label: "💬 声かけ", text: "「ご自身での実感はいかがですか？私は○○になってきていると思います」" },
+                      ],
+                    },
+                    {
+                      num: 9,
+                      title: "会計・次回予約・お見送り",
+                      time: "約5分",
+                      blocks: [
+                        { label: "💳", text: "お会計" },
+                        { label: "📅", text: "次回予約の確認" },
+                        { label: "🚪", text: "笑顔でお見送り" },
+                      ],
+                    },
+                  ].map((step) => (
+                    <div
+                      key={step.num}
+                      style={{
+                        background: "#fff",
+                        border: "1px solid rgba(183,148,110,0.2)",
+                        borderRadius: 10,
+                        padding: "16px 18px",
+                        marginBottom: 14,
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          marginBottom: 12,
+                          borderBottom: "1px solid rgba(183,148,110,0.2)",
+                          paddingBottom: 10,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 28,
+                            height: 28,
+                            background: "linear-gradient(135deg,#b7946e,#8b6842)",
+                            color: "#fff",
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {step.num}
+                        </div>
+                        <div style={{ fontSize: 14, fontWeight: 700, flex: 1 }}>
+                          {step.title}
+                        </div>
+                        <span
+                          style={{
+                            fontSize: 10,
+                            padding: "3px 9px",
+                            borderRadius: 10,
+                            background: "rgba(183,148,110,0.12)",
+                            border: "1px solid rgba(183,148,110,0.3)",
+                            color: "#8b6842",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {step.time}
+                        </span>
+                      </div>
+
+                      {step.blocks.map((block, index) => (
+                        <div key={index} style={{ marginBottom: 10 }}>
+                          <div
+                            style={{
+                              display: "inline-block",
+                              fontSize: 9,
+                              padding: "2px 7px",
+                              borderRadius: 2,
+                              marginBottom: 5,
+                              fontWeight: 500,
+                              letterSpacing: 1,
+                              background: "rgba(139,104,66,0.1)",
+                              color: "#8b6842",
+                              border: "1px solid rgba(139,104,66,0.2)",
+                            }}
+                          >
+                            {block.label}
+                          </div>
+                          <div
+                            style={{
+                              background: "#f9f6f1",
+                              borderLeft: "2px solid rgba(183,148,110,0.4)",
+                              padding: "8px 12px",
+                              borderRadius: "0 4px 4px 0",
+                              fontSize: 12,
+                              lineHeight: 1.85,
+                              color: "#5a4a40",
+                            }}
+                          >
+                            {block.text}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div>
+                  <h2 style={{ marginTop: 0 }}>{selectedManual.title}</h2>
+                  <p>{selectedManual.description || "説明なし"}</p>
+                  <div
+                    style={{
+                      whiteSpace: "pre-line",
+                      lineHeight: 1.9,
+                      background: "#fafafa",
+                      padding: 16,
+                      borderRadius: 10,
+                    }}
+                  >
+                    {selectedManual.content || "本文なし"}
+                  </div>
+                  <p style={{ marginTop: 16 }}>
+                    <strong>所要時間:</strong> {selectedManual.total_time || "未設定"}
+                  </p>
+                  <p>
+                    <strong>カテゴリ:</strong> {selectedManual.category || "未設定"}
+                  </p>
+                </div>
               )}
             </div>
           )}
