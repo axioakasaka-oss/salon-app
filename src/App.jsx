@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./supabase";
 
+const MANUAL_CATEGORIES = [
+  { key: "施術", label: "施術マニュアル", icon: "🧴" },
+  { key: "薬剤", label: "使用薬剤", icon: "🧪" },
+  { key: "店販商品", label: "店販商品", icon: "🛍" },
+  { key: "接客", label: "接客", icon: "🤝" },
+  { key: "カウンセリング", label: "カウンセリング", icon: "💬" },
+  { key: "システム", label: "システム", icon: "⚙" },
+];
+
 export default function App() {
   const [topics, setTopics] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -12,6 +21,7 @@ export default function App() {
   const [showManuals, setShowManuals] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedManual, setSelectedManual] = useState(null);
+  const [activeManualCategory, setActiveManualCategory] = useState("施術");
 
   useEffect(() => {
     loadTopics();
@@ -40,6 +50,7 @@ export default function App() {
     setShowManuals(false);
     setManuals([]);
     setSelectedManual(null);
+    setActiveManualCategory("施術");
 
     const [questionsRes, suggestionsRes, branchesRes] = await Promise.all([
       supabase
@@ -230,6 +241,32 @@ export default function App() {
     letterSpacing: 0.3,
   };
 
+  const manualTabWrapStyle = {
+    display: "flex",
+    gap: 10,
+    overflowX: "auto",
+    paddingBottom: 6,
+    marginBottom: 16,
+  };
+
+  const getManualTabStyle = (isActive) => ({
+    flex: "0 0 auto",
+    minWidth: 120,
+    padding: "12px 14px",
+    borderRadius: 14,
+    border: isActive ? "1px solid #8b6842" : "1px solid #d8c7b3",
+    background: isActive ? "#efe3d4" : "#fff",
+    cursor: "pointer",
+    textAlign: "center",
+    fontSize: 14,
+    lineHeight: 1.5,
+    fontWeight: isActive ? 700 : 500,
+  });
+
+  const filteredManuals = manuals.filter(
+    (m) => m.category === activeManualCategory
+  );
+
   return (
     <div style={layoutStyle}>
       <h1 style={headingStyle}>AXIO Salon カウンセリングツリー</h1>
@@ -401,39 +438,43 @@ export default function App() {
 
           {showManuals && (
             <div style={cardStyle}>
-              <div style={sectionTitleStyle}>施術マニュアル</div>
+              <div style={sectionTitleStyle}>マニュアル一覧</div>
 
-              {["施術", "薬剤", "店販商品", "接客", "カウンセリング", "システム"].map(
-                (cat) => (
-                  <div key={cat} style={{ marginBottom: 24 }}>
-                    <h2 style={{ fontSize: 18, marginBottom: 10 }}>{cat}</h2>
+              <div style={manualTabWrapStyle}>
+                {MANUAL_CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.key}
+                    onClick={() => {
+                      setActiveManualCategory(cat.key);
+                      setSelectedManual(null);
+                    }}
+                    style={getManualTabStyle(activeManualCategory === cat.key)}
+                  >
+                    <div style={{ fontSize: 20, marginBottom: 4 }}>{cat.icon}</div>
+                    <div>{cat.label}</div>
+                  </button>
+                ))}
+              </div>
 
-                    {manuals.filter((m) => m.category === cat).length === 0 ? (
-                      <p style={textStyle}>このカテゴリのマニュアルはまだありません。</p>
-                    ) : (
-                      manuals
-                        .filter((m) => m.category === cat)
-                        .map((m) => (
-                          <div
-                            key={m.id}
-                            style={{
-                              borderTop: "1px solid #eee",
-                              paddingTop: 18,
-                              marginTop: 18,
-                            }}
-                          >
-                            <h3 style={{ marginBottom: 8, lineHeight: 1.6 }}>{m.title}</h3>
-                            <p style={textStyle}>
-                              {m.description || m.content || "説明なし"}
-                            </p>
-                            <button onClick={() => openManual(m)} style={smallButtonStyle}>
-                              詳細を見る
-                            </button>
-                          </div>
-                        ))
-                    )}
+              {filteredManuals.length === 0 ? (
+                <p style={textStyle}>このカテゴリのマニュアルはまだありません。</p>
+              ) : (
+                filteredManuals.map((m) => (
+                  <div
+                    key={m.id}
+                    style={{
+                      borderTop: "1px solid #eee",
+                      paddingTop: 18,
+                      marginTop: 18,
+                    }}
+                  >
+                    <h3 style={{ marginBottom: 8, lineHeight: 1.6 }}>{m.title}</h3>
+                    <p style={textStyle}>{m.description || m.content || "説明なし"}</p>
+                    <button onClick={() => openManual(m)} style={smallButtonStyle}>
+                      詳細を見る
+                    </button>
                   </div>
-                )
+                ))
               )}
             </div>
           )}
