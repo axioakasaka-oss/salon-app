@@ -22,6 +22,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [selectedManual, setSelectedManual] = useState(null);
   const [activeManualCategory, setActiveManualCategory] = useState("施術");
+  const [manualSearch, setManualSearch] = useState("");
 
   useEffect(() => {
     loadTopics();
@@ -51,6 +52,7 @@ export default function App() {
     setManuals([]);
     setSelectedManual(null);
     setActiveManualCategory("施術");
+    setManualSearch("");
 
     const [questionsRes, suggestionsRes, branchesRes] = await Promise.all([
       supabase
@@ -249,6 +251,16 @@ export default function App() {
     marginBottom: 16,
   };
 
+  const searchInputStyle = {
+    width: "100%",
+    padding: "12px 14px",
+    borderRadius: 12,
+    border: "1px solid #d8c7b3",
+    fontSize: 16,
+    marginBottom: 16,
+    boxSizing: "border-box",
+  };
+
   const getManualTabStyle = (isActive) => ({
     flex: "0 0 auto",
     minWidth: 120,
@@ -263,9 +275,25 @@ export default function App() {
     fontWeight: isActive ? 700 : 500,
   });
 
-  const filteredManuals = manuals.filter(
-    (m) => m.category === activeManualCategory
-  );
+  const filteredManuals = manuals.filter((m) => {
+    const matchesCategory = m.category === activeManualCategory;
+    const search = manualSearch.trim().toLowerCase();
+
+    if (!search) return matchesCategory;
+
+    const title = (m.title || "").toLowerCase();
+    const category = (m.category || "").toLowerCase();
+    const content = (m.content || "").toLowerCase();
+    const description = (m.description || "").toLowerCase();
+
+    return (
+      matchesCategory &&
+      (title.includes(search) ||
+        category.includes(search) ||
+        content.includes(search) ||
+        description.includes(search))
+    );
+  });
 
   return (
     <div style={layoutStyle}>
@@ -440,6 +468,14 @@ export default function App() {
             <div style={cardStyle}>
               <div style={sectionTitleStyle}>マニュアル一覧</div>
 
+              <input
+                type="text"
+                placeholder="検索（例：幹細胞、白髪、シャンプー）"
+                value={manualSearch}
+                onChange={(e) => setManualSearch(e.target.value)}
+                style={searchInputStyle}
+              />
+
               <div style={manualTabWrapStyle}>
                 {MANUAL_CATEGORIES.map((cat) => (
                   <button
@@ -457,7 +493,7 @@ export default function App() {
               </div>
 
               {filteredManuals.length === 0 ? (
-                <p style={textStyle}>このカテゴリのマニュアルはまだありません。</p>
+                <p style={textStyle}>該当するマニュアルはありません。</p>
               ) : (
                 filteredManuals.map((m) => (
                   <div
