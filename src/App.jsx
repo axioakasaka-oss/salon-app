@@ -526,6 +526,9 @@ export default function App() {
                 }}
               >
                 <div style={sectionTitleStyle}>マニュアル詳細</div>
+                <h2 style={{marginTop:10, marginBottom:12}}>
+{selectedManual.title}
+</h2>
                 <button onClick={closeManual} style={smallButtonStyle}>
                   閉じる
                 </button>
