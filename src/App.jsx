@@ -2,16 +2,146 @@ import { useEffect, useState } from "react";
 import { supabase } from "./supabase";
 
 // ============================================================
-// 定数
+// ✏️ トーク文・メカニズムはここを書き換えてください
+// ============================================================
+const CAUSE_DATA = {
+
+  ホルモン性薄毛: {
+    icon: "🔬",
+    title: "ホルモンバランスの変化による薄毛",
+    sub: "産後・更年期・生理不順に多いパターン",
+    mechanism: [
+      "エストロゲン（女性ホルモン）が減少する",
+      "毛包（毛が生える袋）への栄養供給が減り、毛が細くなる",
+      "髪の成長期が短くなり、抜け毛が増える・ボリュームが落ちる",
+    ],
+    mechLabel: "なぜ薄毛になるのか — メカニズム",
+    talkOpener: "産後や更年期のタイミングで薄毛を感じる方はとても多いんです。これはホルモンバランスの変化が原因で、髪への栄養が届きにくくなっているサインなんですね。",
+    talkDeep: "女性ホルモンには髪を育てる働きがあって、それが減ると毛根が小さくなってしまいます。でも、適切なケアをすると毛根が復活してくることが多いので、今の状態で諦める必要はないですよ。",
+    talkPoints: ["共感ファースト", "原因を明確に", "希望を伝える"],
+  },
+
+  生活習慣薄毛: {
+    icon: "🌿",
+    title: "生活習慣・ストレスによる薄毛",
+    sub: "睡眠不足・ストレス・食生活に多いパターン",
+    mechanism: [
+      "ストレス・睡眠不足・冷えで自律神経が乱れ血行が悪くなる",
+      "頭皮への血流が減り、毛根に栄養・酸素が届かなくなる",
+      "髪が細く弱くなり、抜け毛・ボリュームダウンにつながる",
+    ],
+    mechLabel: "なぜ髪に影響するのか — メカニズム",
+    talkOpener: "髪って、体の中でも後回しにされやすい部分なんです。栄養や血液は、心臓や内臓など大切な臓器に優先的に送られて、頭皮まで届きにくくなるんですね。",
+    talkDeep: "睡眠中に成長ホルモンが分泌されて、髪もその時間に育ちます。睡眠不足やストレスが続くと、その修復の時間が削られてしまうんです。",
+    talkPoints: ["体全体との繋がりで話す", "睡眠の重要性", "生活改善を促す"],
+  },
+
+  頭皮トラブル: {
+    icon: "💧",
+    title: "頭皮バリア機能の低下",
+    sub: "乾燥・べたつき・かゆみに多いパターン",
+    mechanism: [
+      "シャンプーの洗いすぎ・生活習慣の乱れで皮脂バランスが崩れる",
+      "頭皮のバリア機能が低下し、外部刺激に敏感になる",
+      "毛穴が詰まり、健康な髪が育ちにくい環境になる",
+    ],
+    mechLabel: "なぜ頭皮トラブルが起きるのか — メカニズム",
+    talkOpener: "頭皮って実はお顔の皮膚と繋がっていて、同じようにデリケートなんです。乾燥やべたつきは、頭皮の防御機能が弱まっているサインなんですね。",
+    talkDeep: "毛穴が皮脂や汚れで詰まると、髪の芽が出てくる出口が塞がれてしまいます。まず頭皮をきれいにリセットすることで、その後のケアの効果もぐっと上がりますよ。",
+    talkPoints: ["身近な例えで説明", "毛穴詰まりを可視化", "ケアへ自然につなぐ"],
+  },
+
+  白髪: {
+    icon: "✨",
+    title: "メラノサイト機能の低下",
+    sub: "白髪・色素低下に多いパターン",
+    mechanism: [
+      "ストレス・加齢・栄養不足でメラノサイト（色素細胞）が減少する",
+      "髪に色をつけるメラニン色素が作られなくなる",
+      "新しく生えてくる髪が白くなる",
+    ],
+    mechLabel: "なぜ白髪になるのか — メカニズム",
+    talkOpener: "白髪は加齢だけでなく、ストレスや栄養不足でも出やすくなるんです。髪の色を作る細胞が少なくなってしまっているサインですね。",
+    talkDeep: "一度白くなった髪を黒くするのは難しいのですが、これ以上増やさないためのケアはできます。カラーで隠す方法と、白髪を活かしたデザインの2つの方向性でご提案できますよ。",
+    talkPoints: ["原因を正直に説明", "できることを提案", "デザインの選択肢を示す"],
+  },
+
+  ダメージ: {
+    icon: "💎",
+    title: "髪のタンパク質・水分バランスの乱れ",
+    sub: "切れ毛・枝毛・ダメージに多いパターン",
+    mechanism: [
+      "カラー・パーマ・熱ダメージで髪内部のタンパク質が流出する",
+      "髪のキューティクルが開いたまま水分が逃げやすくなる",
+      "切れ毛・枝毛・パサつき・ツヤのなさにつながる",
+    ],
+    mechLabel: "なぜダメージが起きるのか — メカニズム",
+    talkOpener: "切れ毛や枝毛は、髪の内側のタンパク質が失われているサインなんです。ちょうど、乾燥した木が割れやすくなるのと同じイメージですね。",
+    talkDeep: "一度ダメージを受けた部分は元には戻りませんが、内部を補修することでこれ以上悪化させないことはできます。毎日のホームケアと合わせてケアしていきましょう。",
+    talkPoints: ["例えを使って説明", "正直にダメージを伝える", "ホームケアへ誘導"],
+  },
+
+  血流低下: {
+    icon: "🩸",
+    title: "血流低下による栄養不足",
+    sub: "冷え性・肩こり・運動不足に多いパターン",
+    mechanism: [
+      "冷え性・運動不足・肩こりで首・頭部の血流が低下する",
+      "毛根への栄養・酸素の供給が不足する",
+      "髪のハリ・コシがなくなり細毛・抜け毛につながる",
+    ],
+    mechLabel: "なぜ血流が関係するのか — メカニズム",
+    talkOpener: "頭皮は体の一番上にあるので、血液が届きにくい場所なんです。冷え性や肩こりがある方は特に、頭皮まで栄養が行き渡りにくい状態になっています。",
+    talkDeep: "頭皮マッサージや血行を促すシャンプーの使い方で、かなり改善できることが多いです。ホームケアとサロンケアを組み合わせて、継続することが大切ですね。",
+    talkPoints: ["体の構造で説明", "具体的な改善策を示す", "継続の大切さを伝える"],
+  },
+};
+
+// ============================================================
+// 施術提案データ（追加・変更可能）
+// ============================================================
+const PROPOSAL_DATA = {
+  幹細胞発毛メニュー: {
+    icon: "🔬",
+    desc: "幹細胞培養液×エレクトロポレーションで毛包に直接アプローチ",
+  },
+  ハーブフォンデュシャンプー: {
+    icon: "💧",
+    desc: "ミネラル×育毛ハーブで血行促進・抗酸化作用",
+  },
+  頭皮クレンジング: {
+    icon: "🌿",
+    desc: "毛穴の汚れを浮き出させ頭皮環境をリセット",
+  },
+  白髪ケアカラー提案: {
+    icon: "✨",
+    desc: "白髪を活かしたデザインカラー、または白髪染め",
+  },
+  集中補修トリートメント: {
+    icon: "💎",
+    desc: "毛髪内部を補修してハリ・コシを回復",
+  },
+  ウィッグカウンセリング: {
+    icon: "👩‍🦰",
+    desc: "医療用・ファッション用ウィッグをご提案",
+  },
+  増毛エクステ相談: {
+    icon: "💫",
+    desc: "自然な仕上がりの増毛エクステをご提案",
+  },
+};
+
+// ============================================================
+// カテゴリ・選択肢定数
 // ============================================================
 const MANUAL_CATEGORIES = [
-  { key: "施術",           label: "施術",           icon: "🧴" },
-  { key: "ウィッグ",      label: "ウィッグ",      icon: "👩‍🦰" },
-  { key: "薬剤",           label: "薬剤",           icon: "🧪" },
-  { key: "店販商品",      label: "店販商品",      icon: "🛍" },
-  { key: "接客",           label: "接客",           icon: "🤝" },
-  { key: "カウンセリング", label: "カウンセリング", icon: "💬" },
-  { key: "システム",      label: "システム",      icon: "⚙" },
+  { key: "施術",           icon: "🧴" },
+  { key: "ウィッグ",      icon: "👩‍🦰" },
+  { key: "薬剤",           icon: "🧪" },
+  { key: "店販商品",      icon: "🛍" },
+  { key: "接客",           icon: "🤝" },
+  { key: "カウンセリング", icon: "💬" },
+  { key: "システム",      icon: "⚙" },
 ];
 
 const WORRIES = [
@@ -80,70 +210,118 @@ function buildProposal(chips, singles) {
   const sg  = (g) => singles[g] || "";
 
   const warnings  = [];
-  const causes    = [];
+  const causeKeys = [];
   const proposals = [];
-  const talks     = [];
 
-  if (has("抗がん剤治療中・前後")) {
+  if (has("抗がん剤治療中・前後"))
     warnings.push("抗がん剤治療中・前後のお客様です。施術前に必ず医師への確認を推奨してください。");
-  }
-  if (has("皮膚科通院歴あり") || has("自己免疫疾患") || has("甲状腺疾患")) {
+  if (has("皮膚科通院歴あり") || has("自己免疫疾患") || has("甲状腺疾患"))
     warnings.push("医療的背景があります。施術内容について慎重にご確認ください。");
-  }
 
   const isHormonal = sg("cycle") === "生理不順" || sg("cycle") === "閉経" || sg("birth") === "あり";
 
   if ((has("抜け毛") || has("薄毛")) && isHormonal) {
-    causes.push("ホルモンバランスの変化（産後・更年期）による毛包の萎縮");
-    proposals.push({ icon: "🔬", name: "幹細胞発毛メニュー", desc: "幹細胞培養液×エレクトロポレーションで毛包に直接アプローチ" });
-    proposals.push({ icon: "💧", name: "ハーブフォンデュシャンプー", desc: "ミネラル×育毛ハーブで血行促進・抗酸化作用" });
-    talks.push("「ホルモンバランスの変化による薄毛には、幹細胞培養液を使った発毛メニューが特に効果的です。毛包に直接アプローチするエレクトロポレーションと組み合わせることで、より高い効果が期待できます。」");
+    causeKeys.push("ホルモン性薄毛");
+    proposals.push("幹細胞発毛メニュー", "ハーブフォンデュシャンプー");
   } else if (has("抜け毛") || has("薄毛")) {
-    causes.push("生活習慣・ストレスによる頭皮環境の悪化");
-    proposals.push({ icon: "🔬", name: "幹細胞発毛メニュー", desc: "頭皮環境を整えながら発毛を促進" });
-    talks.push("「生活習慣からくる薄毛には、頭皮環境を根本から整えることが大切です。幹細胞メニューで血行を促進しながら、ホームケアも一緒に見直しましょう。」");
+    causeKeys.push("生活習慣薄毛");
+    proposals.push("幹細胞発毛メニュー");
   }
 
   if (has("頭皮の乾燥・べたつき") || has("かゆみ・炎症")) {
-    causes.push("頭皮バリア機能の低下・皮脂バランスの乱れ");
-    proposals.push({ icon: "🌿", name: "頭皮クレンジング", desc: "毛穴の汚れを浮き出させ頭皮環境をリセット" });
-    talks.push("「頭皮の乾燥やべたつきは、毛穴詰まりや皮脂バランスの乱れが原因のことが多いです。まず頭皮クレンジングでリセットしましょう。」");
+    causeKeys.push("頭皮トラブル");
+    proposals.push("頭皮クレンジング");
   }
 
   if (has("白髪")) {
-    causes.push("メラノサイト機能の低下・栄養不足・ストレス");
-    proposals.push({ icon: "✨", name: "白髪ケア・カラー提案", desc: "白髪を活かしたデザインカラー、または白髪染め" });
-    talks.push("「白髪の原因は色素細胞の機能低下です。カラーで隠す方法と、白髪を活かしたデザインの2つの方向性をご提案できます。」");
+    causeKeys.push("白髪");
+    proposals.push("白髪ケアカラー提案");
   }
 
   if (has("切れ毛・枝毛・ダメージ")) {
-    causes.push("髪のタンパク質・水分バランスの乱れ");
-    proposals.push({ icon: "💎", name: "集中補修トリートメント", desc: "毛髪内部を補修してハリ・コシを回復" });
-    talks.push("「切れ毛や枝毛は、髪内部のタンパク質が失われているサインです。集中トリートメントで補修しながらホームケアも見直しましょう。」");
+    causeKeys.push("ダメージ");
+    proposals.push("集中補修トリートメント");
   }
 
-  if (has("ウィッグ・エクステ相談") || sg("goal") === "ウィッグを検討") {
-    proposals.push({ icon: "👩‍🦰", name: "ウィッグカウンセリング", desc: "医療用・ファッション用ウィッグをご提案" });
-    talks.push("「ウィッグは今とても自然なものが増えています。お客様のライフスタイルに合わせて最適なものをご提案できます。」");
-  }
+  const hasBloodFlow = has("冷え性") || has("肩こりがひどい") || has("運動不足");
+  if (hasBloodFlow) causeKeys.push("血流低下");
 
-  if (sg("goal") === "増毛エクステを検討") {
-    proposals.push({ icon: "💫", name: "増毛エクステ相談", desc: "自然な仕上がりの増毛エクステをご提案" });
-  }
+  if (has("ウィッグ・エクステ相談") || sg("goal") === "ウィッグを検討")
+    proposals.push("ウィッグカウンセリング");
+  if (sg("goal") === "増毛エクステを検討")
+    proposals.push("増毛エクステ相談");
 
-  const lifeKeys = ["睡眠不足（6h未満）", "強いストレスを感じた", "ダイエット中・食事制限", "冷え性"];
-  const lifeFactors = lifeKeys.filter(has).map((k) =>
-    k.replace("（6h未満）", "").replace("を感じた", "").replace("中・食事制限", "")
+  const uniqueProposals = [...new Set(proposals)];
+  if (uniqueProposals.length === 0) uniqueProposals.push("ウィッグカウンセリング");
+
+  return { warnings, causeKeys, proposals: uniqueProposals };
+}
+
+// ============================================================
+// 原因カードコンポーネント
+// ============================================================
+function CauseCard({ dataKey }) {
+  const d = CAUSE_DATA[dataKey];
+  if (!d) return null;
+
+  return (
+    <div style={{ border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden", marginBottom: 14, background: C.surface, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+      {/* ヘッダー */}
+      <div style={{ padding: "13px 16px", display: "flex", alignItems: "center", gap: 10, borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, background: C.accentLight, flexShrink: 0 }}>
+          {d.icon}
+        </div>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: C.text, lineHeight: 1.4 }}>{d.title}</div>
+          <div style={{ fontSize: 12, color: C.textSub, marginTop: 2 }}>{d.sub}</div>
+        </div>
+      </div>
+
+      <div style={{ padding: "14px 16px" }}>
+        {/* メカニズム */}
+        <div style={{ background: "#f7f4f0", borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: 0.5, marginBottom: 10 }}>
+            {d.mechLabel}
+          </div>
+          {d.mechanism.map((step, i) => (
+            <div key={i}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                <div style={{ width: 20, height: 20, borderRadius: "50%", background: C.accent, color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
+                  {i + 1}
+                </div>
+                <div style={{ fontSize: 13, color: C.text, lineHeight: 1.7 }}>{step}</div>
+              </div>
+              {i < d.mechanism.length - 1 && (
+                <div style={{ textAlign: "center", fontSize: 13, color: C.textSub, opacity: 0.4, margin: "2px 0 2px 30px" }}>↓</div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* トークスクリプト */}
+        <div style={{ borderLeft: `3px solid ${C.accent}`, background: "#fdf8f4", borderRadius: "0 10px 10px 0", padding: "12px 14px" }}>
+          <div style={{ fontSize: 11, color: C.accent, fontWeight: 700, marginBottom: 10, display: "flex", alignItems: "center", gap: 4 }}>
+            💬 スタッフ説明トーク
+          </div>
+          <div style={{ fontSize: 11, color: C.textSub, fontWeight: 700, marginBottom: 5 }}>【切り出し方】</div>
+          <div style={{ fontSize: 13, color: C.text, lineHeight: 1.9, marginBottom: 10 }}>
+            「{d.talkOpener}」
+          </div>
+          <div style={{ fontSize: 11, color: C.textSub, fontWeight: 700, marginBottom: 5 }}>【深掘りトーク】</div>
+          <div style={{ fontSize: 13, color: C.text, lineHeight: 1.9, marginBottom: 10 }}>
+            「{d.talkDeep}」
+          </div>
+          <div>
+            {d.talkPoints.map((p, i) => (
+              <span key={i} style={{ display: "inline-block", background: C.accentLight, color: C.accentText, fontSize: 11, padding: "2px 9px", borderRadius: 10, margin: "0 4px 4px 0", fontWeight: 700 }}>
+                {p}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   );
-  if (lifeFactors.length > 0) {
-    causes.push(`生活習慣（${lifeFactors.join("・")}）による頭皮への血流低下`);
-  }
-
-  if (proposals.length === 0) {
-    proposals.push({ icon: "💬", name: "詳細カウンセリング", desc: "お悩みに合わせた施術をご提案します" });
-  }
-
-  return { warnings, causes, proposals, talks };
 }
 
 // ============================================================
@@ -165,54 +343,31 @@ function CounselingView() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const reset = () => {
-    setChips({}); setSingles({}); setResult(null); setStep(1);
-  };
+  const reset = () => { setChips({}); setSingles({}); setResult(null); setStep(1); };
 
   const chipStyle = (on, warn) => ({
-    display: "inline-block",
-    padding: "7px 13px",
-    borderRadius: 20,
+    display: "inline-block", padding: "7px 13px", borderRadius: 20, cursor: "pointer",
     border: `1px solid ${on ? (warn ? C.warnBorder : C.accent) : (warn ? C.warnBorder : C.border)}`,
     background: on ? (warn ? C.warnBg : C.accentLight) : (warn ? "#fff8f8" : C.surface),
     color: on ? (warn ? C.warn : C.accentText) : (warn ? C.warn : C.textSub),
-    cursor: "pointer",
-    fontSize: 13,
-    fontWeight: on ? 700 : 400,
-    margin: "0 5px 7px 0",
-    transition: "all 0.15s",
+    fontSize: 13, fontWeight: on ? 700 : 400, margin: "0 5px 7px 0", transition: "all 0.15s",
   });
 
-  const card = {
-    border: `1px solid ${C.border}`, borderRadius: 16,
-    padding: "16px 18px", marginBottom: 12,
-    background: C.surface, boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
-  };
-  const secLabel = { fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: 0.5, marginBottom: 12 };
-  const navRow   = { display: "flex", gap: 8, marginTop: 14 };
-  const btnPri   = { flex: 1, padding: "12px 16px", borderRadius: 12, border: "none", background: C.accent, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" };
-  const btnDis   = { flex: 1, padding: "12px 16px", borderRadius: 12, border: `1px solid ${C.border}`, background: "#ede8e2", color: C.textSub, fontSize: 14, cursor: "not-allowed" };
-  const btnBack  = { padding: "12px 16px", borderRadius: 12, border: `1px solid ${C.border}`, background: C.surface, color: C.textSub, fontSize: 14, cursor: "pointer" };
+  const card    = { border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px 18px", marginBottom: 12, background: C.surface, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" };
+  const secLbl  = { fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: 0.5, marginBottom: 12 };
+  const navRow  = { display: "flex", gap: 8, marginTop: 14 };
+  const btnPri  = { flex: 1, padding: "12px 16px", borderRadius: 12, border: "none", background: C.accent, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" };
+  const btnDis  = { flex: 1, padding: "12px 16px", borderRadius: 12, border: `1px solid ${C.border}`, background: "#ede8e2", color: C.textSub, fontSize: 14, cursor: "not-allowed" };
+  const btnBack = { padding: "12px 16px", borderRadius: 12, border: `1px solid ${C.border}`, background: C.surface, color: C.textSub, fontSize: 14, cursor: "pointer" };
 
-  // 進捗バー
   const Progress = () => (
     <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 18 }}>
       {[1, 2, 3, 4].map((n) => (
         <div key={n} style={{ display: "flex", alignItems: "center", flex: n < 4 ? "0 0 auto" : 1 }}>
-          <div style={{
-            width: 26, height: 26, borderRadius: "50%",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 11, fontWeight: 700, flexShrink: 0,
-            border: step === n ? `2px solid ${C.accent}` : `1px solid ${C.border}`,
-            background: step > n ? C.accent : step === n ? C.surface : "#f5f0ea",
-            color: step > n ? "#fff" : step === n ? C.accent : C.textSub,
-            transition: "all 0.2s",
-          }}>
+          <div style={{ width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0, border: step === n ? `2px solid ${C.accent}` : `1px solid ${C.border}`, background: step > n ? C.accent : step === n ? C.surface : "#f5f0ea", color: step > n ? "#fff" : step === n ? C.accent : C.textSub, transition: "all 0.2s" }}>
             {step > n ? "✓" : n}
           </div>
-          {n < 4 && (
-            <div style={{ flex: 1, height: 1, minWidth: 20, background: step > n ? C.accent : C.border, transition: "background 0.2s" }} />
-          )}
+          {n < 4 && <div style={{ flex: 1, height: 1, minWidth: 20, background: step > n ? C.accent : C.border, transition: "background 0.2s" }} />}
         </div>
       ))}
     </div>
@@ -222,67 +377,39 @@ function CounselingView() {
     <div>
       <Progress />
 
-      {/* STEP 1: お悩み */}
+      {/* STEP 1 */}
       {step === 1 && (
         <div>
           <div style={card}>
-            <div style={secLabel}>STEP 1 · 本日のお悩み（複数選択可）</div>
-            <div>
-              {WORRIES.map((w) => (
-                <span key={w.key} style={chipStyle(!!chips[w.key], w.warn)} onClick={() => toggleChip(w.key)}>
-                  {w.key}
-                </span>
-              ))}
-            </div>
+            <div style={secLbl}>STEP 1 · 本日のお悩み（複数選択可）</div>
+            <div>{WORRIES.map((w) => <span key={w.key} style={chipStyle(!!chips[w.key], w.warn)} onClick={() => toggleChip(w.key)}>{w.key}</span>)}</div>
           </div>
           <div style={card}>
-            <div style={secLabel}>いつ頃から？</div>
-            <div>
-              {SINCE_OPTIONS.map((o) => (
-                <span key={o} style={chipStyle(singles.since === o, false)} onClick={() => setSingle("since", o)}>
-                  {o}
-                </span>
-              ))}
-            </div>
+            <div style={secLbl}>いつ頃から？</div>
+            <div>{SINCE_OPTIONS.map((o) => <span key={o} style={chipStyle(singles.since === o, false)} onClick={() => setSingle("since", o)}>{o}</span>)}</div>
           </div>
           <div style={navRow}>
-            <button style={hasAnyWorry ? btnPri : btnDis} disabled={!hasAnyWorry} onClick={() => goStep(2)}>
-              次へ →
-            </button>
+            <button style={hasAnyWorry ? btnPri : btnDis} disabled={!hasAnyWorry} onClick={() => goStep(2)}>次へ →</button>
           </div>
         </div>
       )}
 
-      {/* STEP 2: 医療・体質 */}
+      {/* STEP 2 */}
       {step === 2 && (
         <div>
           <div style={card}>
-            <div style={secLabel}>STEP 2 · 医療・体質について</div>
-            <div>
-              {MEDICAL.map((m) => (
-                <span key={m.key} style={chipStyle(!!chips[m.key], m.warn)} onClick={() => toggleChip(m.key)}>
-                  {m.key}
-                </span>
-              ))}
-            </div>
+            <div style={secLbl}>STEP 2 · 医療・体質について</div>
+            <div>{MEDICAL.map((m) => <span key={m.key} style={chipStyle(!!chips[m.key], m.warn)} onClick={() => toggleChip(m.key)}>{m.key}</span>)}</div>
           </div>
           <div style={card}>
-            <div style={secLabel}>女性ホルモン関連</div>
+            <div style={secLbl}>女性ホルモン関連</div>
             <div style={{ marginBottom: 12 }}>
               <div style={{ fontSize: 12, color: C.textSub, marginBottom: 6 }}>出産経験</div>
-              <div>
-                {BIRTH_OPTIONS.map((o) => (
-                  <span key={o} style={chipStyle(singles.birth === o, false)} onClick={() => setSingle("birth", o)}>{o}</span>
-                ))}
-              </div>
+              <div>{BIRTH_OPTIONS.map((o) => <span key={o} style={chipStyle(singles.birth === o, false)} onClick={() => setSingle("birth", o)}>{o}</span>)}</div>
             </div>
             <div>
               <div style={{ fontSize: 12, color: C.textSub, marginBottom: 6 }}>生理周期</div>
-              <div>
-                {CYCLE_OPTIONS.map((o) => (
-                  <span key={o} style={chipStyle(singles.cycle === o, false)} onClick={() => setSingle("cycle", o)}>{o}</span>
-                ))}
-              </div>
+              <div>{CYCLE_OPTIONS.map((o) => <span key={o} style={chipStyle(singles.cycle === o, false)} onClick={() => setSingle("cycle", o)}>{o}</span>)}</div>
             </div>
           </div>
           <div style={navRow}>
@@ -292,26 +419,16 @@ function CounselingView() {
         </div>
       )}
 
-      {/* STEP 3: 生活習慣 */}
+      {/* STEP 3 */}
       {step === 3 && (
         <div>
           <div style={card}>
-            <div style={secLabel}>STEP 3 · 生活習慣チェック</div>
-            <div>
-              {LIFESTYLE.map((l) => (
-                <span key={l.key} style={chipStyle(!!chips[l.key], l.warn)} onClick={() => toggleChip(l.key)}>
-                  {l.key}
-                </span>
-              ))}
-            </div>
+            <div style={secLbl}>STEP 3 · 生活習慣チェック</div>
+            <div>{LIFESTYLE.map((l) => <span key={l.key} style={chipStyle(!!chips[l.key], l.warn)} onClick={() => toggleChip(l.key)}>{l.key}</span>)}</div>
           </div>
           <div style={card}>
-            <div style={secLabel}>理想の状態</div>
-            <div>
-              {GOAL_OPTIONS.map((o) => (
-                <span key={o} style={chipStyle(singles.goal === o, false)} onClick={() => setSingle("goal", o)}>{o}</span>
-              ))}
-            </div>
+            <div style={secLbl}>理想の状態</div>
+            <div>{GOAL_OPTIONS.map((o) => <span key={o} style={chipStyle(singles.goal === o, false)} onClick={() => setSingle("goal", o)}>{o}</span>)}</div>
           </div>
           <div style={navRow}>
             <button style={btnBack} onClick={() => goStep(2)}>← 戻る</button>
@@ -323,57 +440,42 @@ function CounselingView() {
       {/* STEP 4: 提案結果 */}
       {step === 4 && result && (
         <div>
+          {/* 警告 */}
           {result.warnings.length > 0 && (
-            <div style={{ background: C.warnBg, border: `1px solid ${C.warnBorder}`, borderRadius: 14, padding: "12px 16px", marginBottom: 12 }}>
+            <div style={{ background: C.warnBg, border: `1px solid ${C.warnBorder}`, borderRadius: 14, padding: "12px 16px", marginBottom: 14 }}>
               <div style={{ fontSize: 12, color: C.warn, fontWeight: 700, marginBottom: 6 }}>⚠ 注意事項</div>
-              {result.warnings.map((w, i) => (
-                <div key={i} style={{ fontSize: 13, color: C.warn, lineHeight: 1.7 }}>{w}</div>
-              ))}
+              {result.warnings.map((w, i) => <div key={i} style={{ fontSize: 13, color: C.warn, lineHeight: 1.7 }}>{w}</div>)}
             </div>
           )}
 
-          {result.causes.length > 0 && (
-            <div style={{ ...card, background: "#faf8f5" }}>
-              <div style={secLabel}>考えられる原因</div>
-              {result.causes.map((c, i) => (
-                <div key={i} style={{ fontSize: 14, lineHeight: 1.8, marginBottom: 4 }}>・{c}</div>
-              ))}
+          {/* 原因カード */}
+          {result.causeKeys.length > 0 && (
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: 0.5, marginBottom: 12 }}>考えられる原因</div>
+              {result.causeKeys.map((key) => <CauseCard key={key} dataKey={key} />)}
             </div>
           )}
 
-          <div style={{ ...card, padding: 0, overflow: "hidden" }}>
-            <div style={{ background: C.accent, color: "#fff", padding: "11px 16px", fontSize: 13, fontWeight: 700 }}>
-              ✨ おすすめ施術提案
-            </div>
+          {/* 施術提案 */}
+          <div style={{ border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden", marginBottom: 14, background: C.surface }}>
+            <div style={{ background: C.accent, color: "#fff", padding: "11px 16px", fontSize: 13, fontWeight: 700 }}>✨ おすすめ施術提案</div>
             <div style={{ padding: "8px 16px" }}>
-              {result.proposals.map((p, i) => (
-                <div key={i} style={{
-                  display: "flex", alignItems: "flex-start", gap: 12,
-                  padding: "12px 0",
-                  borderBottom: i < result.proposals.length - 1 ? `1px solid ${C.border}` : "none",
-                }}>
-                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: C.accentLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>
-                    {p.icon}
+              {result.proposals.map((name, i) => {
+                const p = PROPOSAL_DATA[name] || { icon: "💬", desc: "" };
+                return (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 0", borderBottom: i < result.proposals.length - 1 ? `1px solid ${C.border}` : "none" }}>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: C.accentLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{p.icon}</div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 3 }}>{name}</div>
+                      <div style={{ fontSize: 13, color: C.textSub, lineHeight: 1.6 }}>{p.desc}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 3 }}>{p.name}</div>
-                    <div style={{ fontSize: 13, color: C.textSub, lineHeight: 1.6 }}>{p.desc}</div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
-          {result.talks.length > 0 && (
-            <div style={{ ...card, borderLeft: `4px solid ${C.accent}`, borderRadius: "0 14px 14px 0", background: "#fdf8f4" }}>
-              <div style={{ fontSize: 12, color: C.accent, fontWeight: 700, marginBottom: 8 }}>💬 説明トーク例</div>
-              {result.talks.map((t, i) => (
-                <div key={i} style={{ fontSize: 13, lineHeight: 1.9, marginBottom: 8 }}>{t}</div>
-              ))}
-            </div>
-          )}
-
-          <div style={navRow}>
+          <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
             <button style={btnBack} onClick={() => goStep(3)}>← 戻る</button>
           </div>
           <button onClick={reset} style={{ display: "block", width: "100%", marginTop: 10, padding: "11px", borderRadius: 12, border: `1px solid ${C.border}`, background: C.surface, color: C.textSub, fontSize: 13, cursor: "pointer" }}>
@@ -402,9 +504,7 @@ function ManualDetail({ manual, onClose }) {
             </div>
           )}
         </div>
-        <button onClick={onClose} style={{ padding: "8px 14px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.surface, cursor: "pointer", fontSize: 13, flexShrink: 0, marginLeft: 12 }}>
-          閉じる
-        </button>
+        <button onClick={onClose} style={{ padding: "8px 14px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.surface, cursor: "pointer", fontSize: 13, flexShrink: 0, marginLeft: 12 }}>閉じる</button>
       </div>
       {manual.description && (
         <div style={{ marginBottom: 14, padding: "12px 14px", background: C.accentLight, borderRadius: 10 }}>
@@ -441,21 +541,16 @@ function ManualView() {
     ? manuals.filter((m) => m.title?.includes(searchQuery) || m.description?.includes(searchQuery) || m.content?.includes(searchQuery))
     : manuals.filter((m) => m.category === activeCategory);
 
-  const card     = { border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px 18px", marginBottom: 12, background: C.surface };
-  const secLabel = { fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: 0.5, marginBottom: 12 };
+  const card    = { border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px 18px", marginBottom: 12, background: C.surface };
+  const secLbl  = { fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: 0.5, marginBottom: 12 };
 
   if (selectedManual) return <ManualDetail manual={selectedManual} onClose={() => setSelectedManual(null)} />;
 
   return (
     <div>
       <div style={{ ...card, padding: "12px 14px" }}>
-        <input
-          type="text"
-          placeholder="🔍  マニュアルを検索（タイトル・内容）"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, background: C.surface, color: C.text, outline: "none", boxSizing: "border-box" }}
-        />
+        <input type="text" placeholder="🔍  マニュアルを検索（タイトル・内容）" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, background: C.surface, color: C.text, outline: "none", boxSizing: "border-box" }} />
         {searchQuery && <div style={{ marginTop: 8, fontSize: 13, color: C.textSub }}>{filtered.length} 件見つかりました</div>}
       </div>
 
@@ -467,7 +562,7 @@ function ManualView() {
               <button key={cat.key} onClick={() => { setActiveCategory(cat.key); setSelectedManual(null); }}
                 style={{ flex: "0 0 auto", padding: "9px 13px", borderRadius: 12, border: `1px solid ${active ? C.accent : C.border}`, background: active ? C.accentLight : C.surface, cursor: "pointer", textAlign: "center", fontSize: 12, fontWeight: active ? 700 : 400, color: active ? C.accent : C.textSub, whiteSpace: "nowrap" }}>
                 <div style={{ fontSize: 18, marginBottom: 3 }}>{cat.icon}</div>
-                {cat.label}
+                {cat.key}
               </button>
             );
           })}
@@ -475,7 +570,7 @@ function ManualView() {
       )}
 
       <div style={card}>
-        <div style={secLabel}>{searchQuery ? "検索結果" : `${activeCategory} マニュアル`}</div>
+        <div style={secLbl}>{searchQuery ? "検索結果" : `${activeCategory} マニュアル`}</div>
         {loading ? (
           <p style={{ color: C.textSub, fontSize: 14 }}>読み込み中...</p>
         ) : filtered.length === 0 ? (
@@ -508,14 +603,12 @@ function ManualView() {
 // ============================================================
 export default function App() {
   const [activeTab, setActiveTab] = useState("counseling");
-
   return (
     <div style={{ padding: "16px", fontFamily: '"Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif', background: C.bg, minHeight: "100vh", color: C.text, maxWidth: "860px", margin: "0 auto" }}>
       <div style={{ marginBottom: 18 }}>
         <div style={{ fontSize: 11, color: C.textSub, letterSpacing: 1, marginBottom: 3 }}>AXIO SALON</div>
         <h1 style={{ fontSize: "clamp(18px, 5vw, 26px)", margin: 0, lineHeight: 1.3 }}>スタッフ教育アプリ</h1>
       </div>
-
       <div style={{ display: "flex", gap: 6, marginBottom: 20, background: C.surface, padding: 5, borderRadius: 14, border: `1px solid ${C.border}` }}>
         {[{ key: "counseling", label: "💬 カウンセリング" }, { key: "manual", label: "📋 マニュアル" }].map((tab) => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)}
@@ -524,7 +617,6 @@ export default function App() {
           </button>
         ))}
       </div>
-
       {activeTab === "counseling" && <CounselingView />}
       {activeTab === "manual"     && <ManualView />}
     </div>
