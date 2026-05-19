@@ -494,7 +494,53 @@ function CounselingView() {
 // マニュアル詳細（HTML対応版）
 // App.jsx の ManualDetail 関数をこれに差し替えてください
 // ============================================================
-function ManualDetail({ manual, onClose }) {
+function getFileType(url) {
+  if (!url) return null;
+  if (url.includes("youtube.com") || url.includes("youtu.be")) return "youtube";
+  if (url.toLowerCase().endsWith(".pdf") || url.includes("/storage/v1/object")) return "pdf";
+  return "link";
+}
+
+function getYouTubeEmbedUrl(url) {
+  const shortMatch = url.match(/youtu\.be\/([^?&]+)/);
+  if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}`;
+  const longMatch = url.match(/[?&]v=([^?&]+)/);
+  if (longMatch) return `https://www.youtube.com/embed/${longMatch[1]}`;
+  return url;
+}
+
+function FileViewer({ url }) {
+  const type = getFileType(url);
+  if (!type) return null;
+  const containerStyle = { marginTop: 14, borderRadius: 12, overflow: "hidden", border: `1px solid ${C.border}` };
+  if (type === "youtube") {
+    return (
+      <div style={containerStyle}>
+        <div style={{ background: C.accentLight, padding: "8px 14px", fontSize: 12, color: C.accentText, fontWeight: 700 }}>▶ 動画マニュアル</div>
+        <div style={{ position: "relative", paddingBottom: "56.25%", height: 0 }}>
+          <iframe src={getYouTubeEmbedUrl(url)} title="動画マニュアル" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} />
+        </div>
+      </div>
+    );
+  }
+  if (type === "pdf") {
+    return (
+      <div style={containerStyle}>
+        <div style={{ background: C.accentLight, padding: "8px 14px", fontSize: 12, color: C.accentText, fontWeight: 700 }}>📄 PDFマニュアル</div>
+        <div style={{ padding: "14px 16px", background: C.surface }}>
+          <a href={url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "10px 18px", borderRadius: 10, background: C.accent, color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>📄 PDFを開く</a>
+          <div style={{ marginTop: 8, fontSize: 12, color: C.textSub }}>タップすると新しいタブで開きます</div>
+        </div>
+        <iframe src={url} title="PDFマニュアル" style={{ width: "100%", height: 500, border: "none", display: "block" }} />
+      </div>
+    );
+  }
+  return (
+    <div style={{ marginTop: 14 }}>
+      <a href={url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "10px 18px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.surface, color: C.accent, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>🔗 ファイルを開く</a>
+    </div>
+  );
+}function ManualDetail({ manual, onClose }) {
   const card = { border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px 18px", marginBottom: 12, background: C.surface };
 
   return (
