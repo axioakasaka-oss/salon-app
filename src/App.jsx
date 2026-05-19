@@ -490,8 +490,13 @@ function CounselingView() {
 // ============================================================
 // マニュアルビュー
 // ============================================================
+// ============================================================
+// マニュアル詳細（HTML対応版）
+// App.jsx の ManualDetail 関数をこれに差し替えてください
+// ============================================================
 function ManualDetail({ manual, onClose }) {
   const card = { border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px 18px", marginBottom: 12, background: C.surface };
+
   return (
     <div style={card}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
@@ -506,21 +511,34 @@ function ManualDetail({ manual, onClose }) {
         </div>
         <button onClick={onClose} style={{ padding: "8px 14px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.surface, cursor: "pointer", fontSize: 13, flexShrink: 0, marginLeft: 12 }}>閉じる</button>
       </div>
+
       {manual.description && (
         <div style={{ marginBottom: 14, padding: "12px 14px", background: C.accentLight, borderRadius: 10 }}>
           <div style={{ fontSize: 12, color: C.accent, fontWeight: 700, marginBottom: 6 }}>概要</div>
           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.8 }}>{manual.description}</p>
         </div>
       )}
+
       {manual.content && (
-        <div style={{ whiteSpace: "pre-line", lineHeight: 2, background: "#fafafa", padding: 16, borderRadius: 12, fontSize: 14, border: `1px solid ${C.border}` }}>
-          {manual.content}
-        </div>
+        manual.is_html ? (
+          // HTML表示モード
+          <div
+            style={{ fontSize: 14, lineHeight: 1.9, color: C.text }}
+            dangerouslySetInnerHTML={{ __html: manual.content }}
+          />
+        ) : (
+          // テキスト表示モード（従来通り）
+          <div style={{ whiteSpace: "pre-line", lineHeight: 2, background: "#fafafa", padding: 16, borderRadius: 12, fontSize: 14, border: `1px solid ${C.border}`, marginBottom: 4 }}>
+            {manual.content}
+          </div>
+        )
       )}
+
+      {/* PDF・YouTube自動表示 */}
+      <FileViewer url={manual.file_url} />
     </div>
   );
 }
-
 function ManualView() {
   const [manuals, setManuals]               = useState([]);
   const [loading, setLoading]               = useState(true);
