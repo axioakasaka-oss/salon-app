@@ -662,6 +662,131 @@ function ManualView() {
   );
 }
 
+
+// ============================================================
+// Q&A・知識検索
+// Supabase RPC: public.search_knowledge(search_text, limit)
+// ============================================================
+function KnowledgeSearchView() {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [error, setError] = useState("");
+
+  async function search() {
+    const text = query.trim();
+    if (!text) return;
+    setLoading(true);
+    setError("");
+    setSearched(true);
+    setSelected(null);
+    const { data, error: rpcError } = await supabase.rpc("search_knowledge", {
+      p_search_text: text,
+      p_limit: 20,
+    });
+    if (rpcError) {
+      setResults([]);
+      setError("検索に失敗しました。Supabaseのsearch_knowledge設定を確認してください。");
+    } else {
+      setResults(data || []);
+    }
+    setLoading(false);
+  }
+
+  async function copyText(text, label = "回答") {
+    try {
+      await navigator.clipboard.writeText(text || "");
+      window.alert(`${label}をコピーしました`);
+    } catch {
+      window.alert("コピーできませんでした。文章を選択してコピーしてください。");
+    }
+  }
+
+  const card = { border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px 18px", marginBottom: 12, background: C.surface };
+
+  if (selected) {
+    return (
+      <div>
+        <button onClick={() => setSelected(null)} style={{ ...btnSearchBack }}>← 検索結果に戻る</button>
+        <div style={card}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
+            <span style={resultBadge(selected.result_type)}>{selected.result_type}</span>
+            {selected.category && <span style={{ fontSize: 12, color: C.textSub }}>{selected.category}</span>}
+          </div>
+          <h2 style={{ margin: "0 0 16px", fontSize: 19, lineHeight: 1.6 }}>{selected.title}</h2>
+          <div style={{ background: "#fdf8f4", borderLeft: `3px solid ${C.accent}`, borderRadius: "0 10px 10px 0", padding: "14px", marginBottom: 14 }}>
+            <div style={{ fontSize: 11, color: C.accent, fontWeight: 700, marginBottom: 7 }}>AXIO公式情報</div>
+            <div style={{ whiteSpace: "pre-line", fontSize: 14, lineHeight: 1.9 }}>{selected.body || "回答本文が登録されていません。"}</div>
+          </div>
+          <button onClick={() => copyText(selected.body, "回答")} style={copyButton}>📋 回答をコピー</button>
+          <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${C.border}`, fontSize: 12, color: C.textSub, lineHeight: 1.8 }}>
+            ※ この画面の情報を基準にお客様へご案内してください。医療的な判断が必要な内容は断定せず、必要に応じて医療機関への相談を案内してください。
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div style={{ ...card, padding: 18 }}>
+        <div style={{ fontSize: 11, color: C.accent, fontWeight: 700, letterSpacing: 0.5, marginBottom: 6 }}>STAFF KNOWLEDGE</div>
+        <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 7 }}>🔍 お客様から聞かれたことを検索</div>
+        <div style={{ fontSize: 13, color: C.textSub, lineHeight: 1.7, marginBottom: 14 }}>LINE・電話・接客中に分からないことを、そのまま文章で入力してください。</div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") search(); }}
+            placeholder="例：最近抜け毛が増えて幹細胞をすすめていい？"
+            style={{ flex: 1, minWidth: 0, padding: "12px 14px", borderRadius: 11, border: `1px solid ${C.border}`, fontSize: 14, background: C.surface, color: C.text, outline: "none" }}
+          />
+          <button onClick={search} disabled={!query.trim() || loading} style={query.trim() && !loading ? searchButton : searchButtonDisabled}>{loading ? "検索中…" : "検索"}</button>
+        </div>
+        <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {["抜け毛　幹細胞", "カラー　頭皮　しみる", "更年期　薄毛", "ウィッグ　相談"].map((x) => (
+            <button key={x} onClick={() => setQuery(x)} style={quickSearch}>{x}</button>
+          ))}
+        </div>
+      </div>
+
+      {error && <div style={{ ...card, color: C.warn, background: C.warnBg, borderColor: C.warnBorder }}>{error}</div>}
+
+      {searched && !loading && !error && (
+        <div style={card}>
+          <div style={{ fontSize: 12, color: C.textSub, marginBottom: 12 }}>{results.length} 件の知識が見つかりました</div>
+          {results.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "24px 10px", color: C.textSub }}>
+              <div style={{ fontSize: 28, marginBottom: 8 }}>🔎</div>
+              <div style={{ fontWeight: 700, color: C.text, marginBottom: 6 }}>回答が見つかりませんでした</div>
+              <div style={{ fontSize: 13, lineHeight: 1.7 }}>キーワードを変えて検索してください。今後「Q&A追加リクエスト」機能も追加できます。</div>
+            </div>
+          ) : results.map((r, i) => (
+            <button key={`${r.result_type}-${r.id}-${i}`} onClick={() => setSelected(r)} style={{ width: "100%", textAlign: "left", border: 0, borderTop: i ? `1px solid ${C.border}` : "none", background: "transparent", padding: "14px 0", cursor: "pointer" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+                <span style={resultBadge(r.result_type)}>{r.result_type}</span>
+                {r.category && <span style={{ fontSize: 11, color: C.textSub }}>{r.category}</span>}
+                {r.keyword_matches > 0 && <span style={{ marginLeft: "auto", fontSize: 11, color: C.accent }}>関連度 {r.keyword_matches}</span>}
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.text, lineHeight: 1.6 }}>{r.title}</div>
+              {r.body && <div style={{ marginTop: 4, fontSize: 12, color: C.textSub, lineHeight: 1.7 }}>{r.body.length > 120 ? r.body.slice(0, 120) + "…" : r.body}</div>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const searchButton = { padding: "11px 16px", borderRadius: 11, border: "none", background: C.accent, color: "#fff", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" };
+const searchButtonDisabled = { ...searchButton, background: "#d8d0c8", cursor: "not-allowed" };
+const btnSearchBack = { padding: "9px 13px", marginBottom: 12, borderRadius: 10, border: `1px solid ${C.border}`, background: C.surface, color: C.textSub, cursor: "pointer" };
+const copyButton = { padding: "10px 14px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.surface, color: C.accent, fontWeight: 700, cursor: "pointer" };
+const quickSearch = { padding: "6px 9px", borderRadius: 999, border: `1px solid ${C.border}`, background: C.surface, color: C.textSub, fontSize: 11, cursor: "pointer" };
+function resultBadge(type) { return { display: "inline-block", padding: "3px 8px", borderRadius: 6, background: type === "Q&A" ? C.accentLight : "#f0eee9", color: type === "Q&A" ? C.accent : C.textSub, fontSize: 10, fontWeight: 700 }; }
+
 // ============================================================
 // メインApp
 // ============================================================
@@ -674,13 +799,14 @@ export default function App() {
         <h1 style={{ fontSize: "clamp(18px, 5vw, 26px)", margin: 0, lineHeight: 1.3 }}>スタッフ教育アプリ</h1>
       </div>
       <div style={{ display: "flex", gap: 6, marginBottom: 20, background: C.surface, padding: 5, borderRadius: 14, border: `1px solid ${C.border}` }}>
-        {[{ key: "counseling", label: "💬 カウンセリング" }, { key: "manual", label: "📋 マニュアル" }].map((tab) => (
+        {[{ key: "knowledge", label: "🔍 Q&A検索" }, { key: "counseling", label: "💬 カウンセリング" }, { key: "manual", label: "📋 マニュアル" }].map((tab) => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)}
             style={{ flex: 1, padding: "10px 8px", borderRadius: 10, border: "none", background: activeTab === tab.key ? C.accent : "transparent", color: activeTab === tab.key ? "#fff" : C.textSub, cursor: "pointer", fontSize: 13, fontWeight: activeTab === tab.key ? 700 : 400, transition: "all 0.15s" }}>
             {tab.label}
           </button>
         ))}
       </div>
+      {activeTab === "knowledge" && <KnowledgeSearchView />}
       {activeTab === "counseling" && <CounselingView />}
       {activeTab === "manual"     && <ManualView />}
     </div>
