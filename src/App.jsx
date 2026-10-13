@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./supabase";
+import AuthGate from "./AuthGate";
+import DOMPurify from "dompurify";
 
 // ============================================================
 // ✏️ トーク文・メカニズムはここを書き換えてください
@@ -494,53 +496,53 @@ function CounselingView() {
 // マニュアル詳細（HTML対応版）
 // App.jsx の ManualDetail 関数をこれに差し替えてください
 // ============================================================
-function getFileType(url) {
-  if (!url) return null;
-  if (url.includes("youtube.com") || url.includes("youtu.be")) return "youtube";
-  if (url.toLowerCase().endsWith(".pdf") || url.includes("/storage/v1/object")) return "pdf";
-  return "link";
+function safeExternalUrl(value) {
+  if (typeof value !== "string" || !value.trim()) return null;
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "https:" || parsed.username || parsed.password) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
 }
 
-function getYouTubeEmbedUrl(url) {
-  const shortMatch = url.match(/youtu\.be\/([^?&]+)/);
-  if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}`;
-  const longMatch = url.match(/[?&]v=([^?&]+)/);
-  if (longMatch) return `https://www.youtube.com/embed/${longMatch[1]}`;
-  return url;
+function youtubeEmbedUrl(parsed) {
+  if (!parsed) return null;
+  const host = parsed.hostname.toLowerCase();
+  let id = null;
+  if (host === "youtu.be") id = parsed.pathname.slice(1);
+  if (host === "www.youtube.com" || host === "youtube.com" || host === "m.youtube.com") {
+    if (parsed.pathname === "/watch") id = parsed.searchParams.get("v");
+    else if (parsed.pathname.startsWith("/embed/")) id = parsed.pathname.split("/")[2];
+  }
+  return id && /^[A-Za-z0-9_-]{11}$/.test(id) ? `https://www.youtube-nocookie.com/embed/${id}` : null;
 }
 
 function FileViewer({ url }) {
-  const type = getFileType(url);
-  if (!type) return null;
+  if (!url) return null;
+  const parsed = safeExternalUrl(url);
+  if (!parsed) return <p style={{ color: C.warn }}>安全に開けない添付URLです。管理者に確認してください。</p>;
+  const embed = youtubeEmbedUrl(parsed);
+  const isPdf = parsed.pathname.toLowerCase().endsWith(".pdf");
   const containerStyle = { marginTop: 14, borderRadius: 12, overflow: "hidden", border: `1px solid ${C.border}` };
-  if (type === "youtube") {
-    return (
-      <div style={containerStyle}>
-        <div style={{ background: C.accentLight, padding: "8px 14px", fontSize: 12, color: C.accentText, fontWeight: 700 }}>▶ 動画マニュアル</div>
-        <div style={{ position: "relative", paddingBottom: "56.25%", height: 0 }}>
-          <iframe src={getYouTubeEmbedUrl(url)} title="動画マニュアル" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} />
-        </div>
+  if (embed) return (
+    <div style={containerStyle}>
+      <div style={{ background: C.accentLight, padding: "8px 14px", fontSize: 12, color: C.accentText, fontWeight: 700 }}>▶ 動画マニュアル</div>
+      <div style={{ position: "relative", paddingBottom: "56.25%", height: 0 }}>
+        <iframe src={embed} title="動画マニュアル" referrerPolicy="strict-origin-when-cross-origin" frameBorder="0" allow="encrypted-media; picture-in-picture" allowFullScreen style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} />
       </div>
-    );
-  }
-  if (type === "pdf") {
-    return (
-      <div style={containerStyle}>
-        <div style={{ background: C.accentLight, padding: "8px 14px", fontSize: 12, color: C.accentText, fontWeight: 700 }}>📄 PDFマニュアル</div>
-        <div style={{ padding: "14px 16px", background: C.surface }}>
-          <a href={url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "10px 18px", borderRadius: 10, background: C.accent, color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>📄 PDFを開く</a>
-          <div style={{ marginTop: 8, fontSize: 12, color: C.textSub }}>タップすると新しいタブで開きます</div>
-        </div>
-        <iframe src={url} title="PDFマニュアル" style={{ width: "100%", height: 500, border: "none", display: "block" }} />
-      </div>
-    );
-  }
-  return (
-    <div style={{ marginTop: 14 }}>
-      <a href={url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "10px 18px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.surface, color: C.accent, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>🔗 ファイルを開く</a>
     </div>
   );
-}function ManualDetail({ manual, onClose }) {
+  // Avoid embedding arbitrary third-party pages in the app's origin.
+  return (
+    <div style={{ marginTop: 14 }}>
+      <a href={parsed.href} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "10px 18px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.surface, color: C.accent, fontSize: 13, textDecoration: "none" }}>{isPdf ? "📄 PDFを開く" : "🔗 添付ファイルを開く"}</a>
+      <div style={{ marginTop: 8, fontSize: 12, color: C.textSub }}>別タブで開きます。資料の公開範囲はStorage側でも確認が必要です。</div>
+    </div>
+  );
+}
+function ManualDetail({ manual, onClose }) {
   const card = { border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px 18px", marginBottom: 12, background: C.surface };
 
   return (
@@ -570,7 +572,7 @@ function FileViewer({ url }) {
           // HTML表示モード
           <div
             style={{ fontSize: 14, lineHeight: 1.9, color: C.text }}
-            dangerouslySetInnerHTML={{ __html: manual.content }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(manual.content, { USE_PROFILES: { html: true }, FORBID_TAGS: ["iframe", "object", "embed", "form", "style"] }) }}
           />
         ) : (
           // テキスト表示モード（従来通り）
@@ -790,7 +792,7 @@ function resultBadge(type) { return { display: "inline-block", padding: "3px 8px
 // ============================================================
 // メインApp
 // ============================================================
-export default function App() {
+function StaffApp() {
   const [activeTab, setActiveTab] = useState("counseling");
   return (
     <div style={{ padding: "16px", fontFamily: '"Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif', background: C.bg, minHeight: "100vh", color: C.text, maxWidth: "860px", margin: "0 auto" }}>
@@ -811,4 +813,8 @@ export default function App() {
       {activeTab === "manual"     && <ManualView />}
     </div>
   );
+}
+
+export default function App() {
+  return <AuthGate><StaffApp /></AuthGate>;
 }
