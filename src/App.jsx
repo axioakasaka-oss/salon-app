@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./supabase";
+import AuthGate from "./AuthGate";
 
 // ============================================================
 // ✏️ トーク文・メカニズムはここを書き換えてください
@@ -790,7 +791,7 @@ function resultBadge(type) { return { display: "inline-block", padding: "3px 8px
 // ============================================================
 // メインApp
 // ============================================================
-export default function App() {
+function StaffApp() {
   const [activeTab, setActiveTab] = useState("counseling");
   return (
     <div style={{ padding: "16px", fontFamily: '"Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif', background: C.bg, minHeight: "100vh", color: C.text, maxWidth: "860px", margin: "0 auto" }}>
@@ -811,4 +812,8 @@ export default function App() {
       {activeTab === "manual"     && <ManualView />}
     </div>
   );
+}
+
+export default function App() {
+  return <AuthGate><StaffApp /></AuthGate>;
 }
